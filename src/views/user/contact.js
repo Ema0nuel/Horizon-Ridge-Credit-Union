@@ -35,31 +35,36 @@ const contact = async () => {
         const notifView = document.getElementById('notif-view');
         if (!notifView) return;
         notifView.innerHTML = `
-            <div class="flex items-center mb-4">
-                <button id="back-to-contact" class="mr-2 px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs"><i class="fa fa-arrow-left"></i> Back</button>
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white">Recent Notifications</h3>
-            </div>
-            <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                ${notifications.length ? notifications.map(n => `
-                    <div class="p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 js-notif-item" data-id="${n.id}">
-                        <div class="flex items-center">
-                            <div class="mr-2">
-                                <i class="fa ${n.type === 'danger' ? 'fa-exclamation-circle text-red-600' : 'fa-envelope text-blue-600'}"></i>
-                            </div>
-                            <div class="flex-1">
-                                <div class="text-xs font-semibold">${n.title || 'Message'}</div>
-                                <div class="text-[11px] text-gray-600 dark:text-gray-300 truncate">${n.message?.slice(0, 60) || ''}${n.message && n.message.length > 60 ? '...' : ''}</div>
-                                <div class="text-[10px] text-gray-400 mt-0.5">${n.created_at?.slice(0, 16).replace('T', ' ')}</div>
-                            </div>
-                            <button class="notif-toggle-btn ml-2 text-xs bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center">
-                                <i class="fa fa-plus"></i>
-                            </button>
-                        </div>
-                        <div class="notif-details hidden mt-2 text-xs text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 rounded p-2">${n.message}</div>
+  <div class="px-4 sm:px-0">
+    <div class="flex items-center mb-4">
+        <button id="back-to-contact" class="mr-2 px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs">
+          <i class="fa fa-arrow-left"></i> Back
+        </button>
+        <h3 class="text-base font-semibold text-gray-900 dark:text-white">Recent Notifications</h3>
+    </div>
+    <div class="divide-y divide-gray-200 dark:divide-gray-700">
+        ${notifications.length ? notifications.map(n => `
+            <div class="p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 js-notif-item rounded-md" data-id="${n.id}">
+                <div class="flex items-start gap-2">
+                    <div class="pt-1">
+                        <i class="fa ${n.type === 'danger' ? 'fa-exclamation-circle text-red-600' : 'fa-envelope text-blue-600'}"></i>
                     </div>
-                `).join('') : `<div class="text-gray-400 dark:text-gray-500 text-xs p-2">No notifications yet.</div>`}
+                    <div class="flex-1 overflow-hidden">
+                        <div class="text-xs font-semibold truncate">${n.title || 'Message'}</div>
+                        <div class="text-[11px] text-gray-600 dark:text-gray-300 truncate">${n.message?.slice(0, 60) || ''}${n.message && n.message.length > 60 ? '...' : ''}</div>
+                        <div class="text-[10px] text-gray-400 mt-0.5">${n.created_at?.slice(0, 16).replace('T', ' ')}</div>
+                    </div>
+                    <button class="notif-toggle-btn text-xs bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center shrink-0">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                </div>
+                <div class="notif-details hidden mt-2 text-xs text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-800 rounded p-2">${n.message}</div>
             </div>
-        `;
+        `).join('') : `<div class="text-gray-400 dark:text-gray-500 text-xs p-2">No notifications yet.</div>`}
+    </div>
+  </div>
+`;
+
         // Back button
         const backBtn = document.getElementById('back-to-contact');
         if (backBtn) {

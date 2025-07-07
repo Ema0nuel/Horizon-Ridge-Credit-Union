@@ -5,7 +5,7 @@ export async function sendWelcomeEmail({ name, email, accountNumber, ip, geo }) 
     <div style="font-family: 'Segoe UI', sans-serif; padding: 24px; background-color: #f4f4f4; color: #333;">
       <div style="max-width: 600px; margin: auto; background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); overflow: hidden;">
         <div style="padding: 24px; text-align: center; background-color: #003865;">
-          <img src="https://horizonridgecreditunion.com/logo.jpg" alt="Horizon Ridge Logo" style="max-width: 120px; margin-bottom: 12px;" />
+          <img src="https://www.horizonridgecreditunion.com/assets/logo-39I1HVw6.jpg" alt="Horizon Ridge Logo" style="max-width: 120px; margin-bottom: 12px;" />
           <h1 style="color: white; margin: 0;">Welcome to Horizon Ridge</h1>
         </div>
         <div style="padding: 24px;">

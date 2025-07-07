@@ -6,7 +6,7 @@
  * @param {string} param0.html - HTML content of the email
  */
 export async function sendEmail({ to, subject, html }) {
-  const res = await fetch('http://localhost:3001/api/send-email', {
+  const res = await fetch('/api/send-email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ to, subject, html }),

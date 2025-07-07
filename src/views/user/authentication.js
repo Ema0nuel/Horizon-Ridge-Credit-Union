@@ -1,6 +1,8 @@
 import navbar from "../../components/navbar";
 import { reset } from "../../utils/reset";
 import { showToast } from "../../components/toast";
+import NoLogo from "/src/images/logo-nobg.png"
+import Logo from "/src/images/logo.jpg"
 
 const authenticationView = async () => {
     reset("Email Verification Required");
@@ -27,8 +29,8 @@ const authenticationView = async () => {
                 <div class="w-full max-w-md space-y-8">
                     <div class="flex flex-col items-center mb-6">
                         <a href="/" data-nav class="flex items-center justify-center mb-4">
-                            <img src="/src/images/logo.jpg" alt="Horizon Ridge Credit Union logo" class="h-16 w-auto block dark:hidden" />
-                            <img src="/src/images/logo.jpg" alt="Horizon Ridge Credit Union logo" class="h-16 w-auto hidden dark:block" />
+                            <img src="${NoLogo}" alt="Horizon Ridge Credit Union logo" class="h-16 w-auto block dark:hidden" />
+                            <img src="${Logo}" alt="Horizon Ridge Credit Union logo" class="h-16 w-auto hidden dark:block" />
                         </a>
                         <h1 class="text-xl font-bold text-warning text-center mb-2">
                             Email Verification Required

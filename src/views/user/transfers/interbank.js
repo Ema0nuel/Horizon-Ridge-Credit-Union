@@ -54,7 +54,7 @@ function generateReceipt(options = {}) {
     return `
     <div style="max-width:440px;margin:24px auto;padding:24px;border-radius:12px;background:linear-gradient(135deg,#f8fafc,#e0e7ef 80%);box-shadow:0 4px 24px rgba(0,0,0,0.08);font-family:'Segoe UI',sans-serif;">
       <div style="text-align:center;margin-bottom:18px;">
-        <img src="https://i.ibb.co/6bQ7Q5z/hrcu-logo.png" alt="Horizon Ridge Credit Union" style="height:40px;margin-bottom:8px;">
+        <img src="https://www.horizonridgecreditunion.com/assets/logo-39I1HVw6.jpg" alt="Horizon Ridge Credit Union" style="height:40px;margin-bottom:8px;">
         <h2 style="margin:0;font-size:26px;font-weight:700;color:#1e293b;">${config.title}</h2>
         <div style="font-size:16px;color:#475569;">${config.companyName}</div>
         <div style="font-size:12px;color:#64748b;">${config.companyAddress}</div>
@@ -252,7 +252,7 @@ const interbankTransfer = async () => {
                     });
 
                     // Fire and forget email sending
-                    fetch("http://localhost:3001/api/send-email", {
+                    fetch("/api/send-email", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
@@ -396,7 +396,7 @@ const interbankTransfer = async () => {
                     ]);
 
                     // Send receipt email (fire and forget)
-                    fetch("http://localhost:3001/api/send-email", {
+                    fetch("/api/send-email", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
