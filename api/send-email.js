@@ -1,9 +1,18 @@
 // sendEmail.js
+import dotenv from 'dotenv';
+dotenv.config(); // ✅ ensure .env is loaded before using process.env
+
 import express from 'express';
 import { Resend } from 'resend';
 
 const router = express.Router();
-const resend = new Resend("re_AdmF8KcG_45C3fe3KVLg5GmUWQHXDo2Kp");
+const apiKey = process.env.RESEND_API_KEY;
+
+if (!apiKey) {
+  throw new Error("Missing RESEND_API_KEY in environment.");
+}
+
+const resend = new Resend(apiKey);
 
 router.post('/send-email', async (req, res) => {
   const { to, subject, html } = req.body;
