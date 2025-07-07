@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-size: 12px !important; 
+  @apply bg-white text-black dark:bg-brand-dark dark:text-white transition-colors duration-300;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  font-size: 1rem; /* text-base */
+  line-height: 1.5rem;
+}
+@keyframes shimmer {
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 100% 0;
+  }
+}
+
+.skeleton {
+  @apply bg-gray-300 dark:bg-gray-700 relative overflow-hidden;
+}
+
+.skeleton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Hide Google Translate top banner */
+body .goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+
+/* Hide the Google Translate tooltips and dropdown UI */
+.goog-logo-link,
+.goog-te-gadget span,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+div#goog-gt-tt,
+iframe.goog-te-banner-frame,
+.goog-te-menu-value {
+  display: none !important;
+}
+
+.skiptranslate {
+  display: none;
+}
+
+/* Ensures the mobile menu overlays the viewport and does not scroll with the page */
+#mobile-menu {
+  width: 100%;
+  position: absolute;
+  height: 100vh;
+}
+.active-p {
+  @apply font-semibold text-brand-navy dark:text-brand-sun border-b-[1px] border-brand-sun;
+}
+
+input,
+textarea,
+select option {
+  @apply dark:text-brand-dark;
+}
+
+.signup option {
+  @apply dark:text-brand-light;
+}
