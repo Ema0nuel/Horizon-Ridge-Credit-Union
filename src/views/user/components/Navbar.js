@@ -1,8 +1,8 @@
 import { supabase } from "../../../utils/supabaseClient";
 import { checkSession } from "../functions/checkSession";
 import { showToast } from "../../../components/toast";
-import User from "/src/images/user/user.png"
-import Logo from "/src/images/logo.jpg"
+import User from "/src/images/user.png";
+import Logo from "/src/images/logo.jpg";
 
 const navbar = () => {
     let notifications = [];

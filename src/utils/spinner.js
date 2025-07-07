@@ -3,6 +3,8 @@
  * The logo zooms in/out with a glow and darkens on zoom out.
  * No text, smooth infinite loop, semi-transparent dark background.
  */
+
+import Logo from "/src/images/logo.jpg"
 export function startLogoSpinner() {
     if (document.getElementById("logo-spinner-preloader")) return;
 
@@ -17,7 +19,7 @@ export function startLogoSpinner() {
     preloader.innerHTML = `
       <div class="relative flex flex-col items-center">
         <img
-          src="/src/images/logo.jpg"
+          src="${Logo}"
           alt="Loading..."
           class="logo-spin-zoom-glow h-24 w-24 md:h-32 md:w-32 rounded-full shadow-xl"
           draggable="false"
