@@ -9,6 +9,30 @@
   box-sizing: border-box;
 }
 
+@font-face {
+  font-family: "BankFont";
+  src:
+    url("/assets/fonts/BankFont.woff2") format("woff2"),
+    url("/assets/fonts/BankFont.woff") format("woff");
+  font-display: swap; /* or 'block' if you want to force render only after font loads */
+}
+
+* {
+  font-family: "BankFont" !important;
+}
+
+/* In base layer */
+@layer base {
+  html {
+    font-family: 'BankFont' !important;
+  }
+}
+
+body, html, * {
+  font-family: 'BankFont' !important;
+}
+
+
 body {
   font-size: 12px !important;
   @apply bg-white text-black dark:bg-brand-dark dark:text-white transition-colors duration-300;

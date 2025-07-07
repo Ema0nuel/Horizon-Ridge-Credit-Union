@@ -14,6 +14,9 @@ export default {
           light: '#ffffff', // ✅ used instead of 'white'
           dark: '#111827'   // ✅ used instead of 'black'
         }
+      },
+      fontFamily: {
+        sans: ['BankFont'],
       }
     }
   },
