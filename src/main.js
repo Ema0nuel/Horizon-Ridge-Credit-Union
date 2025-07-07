@@ -19,3 +19,16 @@ document.addEventListener("click", async (e) => {
         target = target.parentElement;
     }
 });
+
+
+function loadJivoChat() {
+  if (window.jivo_api) return; // Prevent duplicate loading
+
+  const script = document.createElement('script');
+  script.src = '//code.jivosite.com/widget/lhfN2DQKWY';
+  script.async = true;
+  document.body.appendChild(script);
+}
+
+// Call this once on initial load (e.g., after auth check or router load)
+loadJivoChat();
