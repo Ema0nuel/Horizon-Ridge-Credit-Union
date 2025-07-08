@@ -3,10 +3,14 @@ import { showToast } from '../../components/toast';
 import { sendEmail } from './functions/Emailing/sendEmail';
 import { reset } from '../../utils/reset';
 import navbar from './components/Navbar';
-import User from "/src/images/user/user.png"
-
+import User from "/src/images/user/user.png";
 
 const ADMIN_EMAIL = "horizonridgecreditunion@gmail.com";
+
+// --- SCHEMA SUGGESTION ---
+// Table: profiles
+// Columns: id (uuid), ...other fields..., avatar_url (text, nullable)
+// Storage bucket: profile-pictures (public, for user avatars)
 
 const editProfile = async () => {
     reset("Edit Profile");
@@ -48,6 +52,55 @@ const editProfile = async () => {
                 document.getElementById(tabId).classList.remove("hidden");
             });
         });
+
+        // --- Profile Picture Upload ---
+        const avatarInput = document.getElementById("avatar-upload");
+        const avatarImg = document.getElementById("avatar-img");
+        const avatarSpinner = document.getElementById("avatar-spinner");
+        if (avatarInput) {
+            avatarInput.onchange = async function () {
+                const file = avatarInput.files[0];
+                if (!file) return;
+                if (!file.type.startsWith("image/")) {
+                    showToast("Please select a valid image file.", "error");
+                    return;
+                }
+                avatarSpinner.classList.remove("hidden");
+                // Upload to Supabase Storage (bucket: profile-pictures)
+                const fileExt = file.name.split('.').pop();
+                const filePath = `${user.id}/avatar_${Date.now()}.${fileExt}`;
+                const { data, error } = await supabase.storage
+                    .from('profile-pictures')
+                    .upload(filePath, file, { upsert: true });
+                if (error) {
+                    showToast("Failed to upload image.", "error");
+                    avatarSpinner.classList.add("hidden");
+                    return;
+                }
+                // Get public URL
+                const { data: urlData } = supabase.storage
+                    .from('profile-pictures')
+                    .getPublicUrl(data.path);
+                const avatar_url = urlData?.publicUrl;
+                if (!avatar_url) {
+                    showToast("Failed to get image URL.", "error");
+                    avatarSpinner.classList.add("hidden");
+                    return;
+                }
+                // Update profile with new avatar_url
+                const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({ avatar_url })
+                    .eq('id', user.id);
+                avatarSpinner.classList.add("hidden");
+                if (updateError) {
+                    showToast("Failed to update profile picture.", "error");
+                    return;
+                }
+                avatarImg.src = avatar_url;
+                showToast("Profile picture updated!", "success");
+            };
+        }
 
         // Edit Profile Form
         const editForm = document.getElementById("edit-profile-form");
@@ -204,7 +257,14 @@ const editProfile = async () => {
                             <div class="tw-tab-pane" id="profile-tab">
                                 <div class="flex flex-col md:flex-row gap-8">
                                     <div class="md:w-1/4 flex flex-col items-center">
-                                        <img src="${profile.avatar_url || User}" class="rounded-full mb-2 border border-gray-200 dark:border-gray-700 w-40 h-40 object-cover" alt="Profile Picture">
+                                        <div class="relative group">
+                                            <img id="avatar-img" src="${profile.avatar_url || User}" class="rounded-full mb-2 border border-gray-200 dark:border-gray-700 w-40 h-40 object-cover" alt="Profile Picture">
+                                            <label class="absolute bottom-2 right-2 bg-blue-600 text-white rounded-full p-2 cursor-pointer hover:bg-blue-700 transition" title="Change Picture">
+                                                <i class="fa fa-camera"></i>
+                                                <input id="avatar-upload" type="file" accept="image/*" class="hidden" />
+                                            </label>
+                                            <span id="avatar-spinner" class="hidden absolute top-2 left-2 bg-white/80 rounded-full p-1"><i class="fa fa-spinner fa-spin text-blue-600"></i></span>
+                                        </div>
                                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">${profile.full_name} <i class="fa fa-circle text-green-500 text-xs"></i></h2>
                                         <a href="mailto:${profile.email}" class="btn bg-blue-600 text-white px-4 py-1 rounded text-xs mt-2"><i class="fa fa-envelope-o"></i> Send Message</a>
                                     </div>

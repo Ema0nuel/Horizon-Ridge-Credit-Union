@@ -347,6 +347,18 @@ const navbar = () => {
                             </a>
                         </li>
                         <li>
+                            <a href="/loan" data-nav class="flex items-center px-2 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 font-normal text-xs">
+                                <i class="fa-solid fa-landmark mr-2 text-base"></i>
+                                <span class="sidebar-text">Loan</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/cards" data-nav class="flex items-center px-2 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 font-normal text-xs">
+                                <i class="fa-solid fa-credit-card mr-2 text-base"></i>
+                                <span class="sidebar-text">Credit Cards</span>
+                            </a>
+                        </li>
+                        <li>
                             <a class="cursor-pointer flex items-center px-2 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 font-normal text-xs" id="logout">
                                 <i class="fa fa-power-off mr-2 text-base"></i>
                                 <span class="sidebar-text">Logout</span>

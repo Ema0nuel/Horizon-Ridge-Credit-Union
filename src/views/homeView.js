@@ -22,21 +22,21 @@ const homeView = () => {
         desc: "Get approved in as little as 24 hours. Enjoy competitive rates, flexible repayments, and a dedicated team to guide you home.",
         img: "https://westcoastsgroup.com/siteassets/personal/homeloans/expresshomeloan/headerbanner-express-hl.jpg",
         cta: "Apply Now",
-        ctaLink: "/user/login"
+        ctaLink: "/login"
       },
       {
         title: "Your Dream Home Awaits.",
         desc: "Unlock exclusive member rates and personalized support. Start your journey with Horizon Ridge Credit Union today.",
         img: "https://westcoastsgroup.com/siteassets/homepage/carousel/headerbanner-mostsatisfiedhlcusts.jpg",
         cta: "Start Now",
-        ctaLink: "/user/signup"
+        ctaLink: "/signup"
       },
       {
         title: "Refinance & Save Big.",
         desc: "Switch your home loan and save with our low rates and zero application fees. See how much you could save in minutes.",
         img: "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=1200&q=80",
         cta: "See Savings",
-        ctaLink: "/user/login"
+        ctaLink: "/login"
       }
     ];
     function animateHeroBanner(next = true) {

@@ -34,6 +34,8 @@ const routes = {
   "user/withdrawal": () => import("./views/user/withdrawal"),
   "user/deposit": () => import("./views/user/deposit"),
   "user/contact": () => import("./views/user/contact"),
+  "user/loan": () => import("./views/user/loan"),
+  "user/cards": () => import("./views/user/cards"),
   "user/transfer/local": () => import("./views/user/transfers/local"),
   "user/transfer/wire": () => import("./views/user/transfers/wire"),
   "user/transfer/interbank": () => import("./views/user/transfers/interbank"),
@@ -57,6 +59,8 @@ export function parsePathToRoute(pathname) {
   if (clean === "user/withdrawal" || clean === "withdrawal") return { page: "user/withdrawal" };
   if (clean === "user/deposit" || clean === "deposit") return { page: "user/deposit" };
   if (clean === "user/contact" || clean === "contact") return { page: "user/contact" };
+  if (clean === "user/loan" || clean === "loan") return { page: "user/loan" };
+  if (clean === "user/cards" || clean === "cards") return { page: "user/cards" };
   if (clean === "user/transfer/local" || clean === "transfer/local" || clean === "local-transfer") return { page: "user/transfer/local" };
   if (clean === "user/transfer/wire" || clean === "transfer/wire" || clean === "wire-transfer") return { page: "user/transfer/wire" };
   if (clean === "user/transfer/interbank" || clean === "transfer/interbank" || clean === "interbank-transfer") return { page: "user/transfer/interbank" };
@@ -150,6 +154,10 @@ function getPathForRoute(page, ...args) {
       return "/user/withdrawal";
     case "user/contact":
       return "/user/contact";
+    case "user/loan":
+      return "/user/loan";
+    case "user/cards":
+      return "/user/cards";
     case "user/transfer/local":
       return "/user/transfer/local";
     case "user/transfer/wire":
