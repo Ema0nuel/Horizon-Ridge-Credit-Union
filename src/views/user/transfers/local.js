@@ -267,7 +267,7 @@ const localTransfer = async () => {
         });
 
         // Fire and forget email sending
-        fetch("`/api/send-email", {
+        fetch("/api/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
