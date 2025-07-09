@@ -6,7 +6,7 @@ import { sendEmail } from "/src/views/user/functions/Emailing/sendEmail.js";
 import { signupUser } from "/src/views/user/functions/signupHandler.js";
 
 // --- Only for local testing! ---
-const SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indjd25neG9mamN6cGJmcHJyc2R4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTQ4ODU1OSwiZXhwIjoyMDY3MDY0NTU5fQ.ZTe_zDnZ4DOC0eqC2OIZbTeYnIIR57DeWoVfl0jsxKk";
+const SUPABASE_SERVICE_ROLE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 const SUPABASE_PROJECT_URL = "https://wcwngxofjczpbfprrsdx.supabase.co";
 async function deleteSupabaseUser(user_id) {
   const res = await fetch(`${SUPABASE_PROJECT_URL}/auth/v1/admin/users/${user_id}`, {
@@ -39,7 +39,6 @@ function statusIcon(status) {
   return `<span title="Pending" class="text-yellow-600 text-lg">⏸</span>`;
 }
 
-// User Create/Edit Modal (mobile-friendly, animated)
 function UserFormModal({ mode, user = {} }) {
   return `
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 animate-fade-in" style="backdrop-filter: blur(2px)">
@@ -177,7 +176,6 @@ function ConfirmDeleteModal({ name }) {
   `;
 }
 
-// Responsive User Table (cards on mobile, table on desktop)
 function UserTable(users) {
   return `
     <div class="mb-4 flex flex-wrap gap-2 items-center justify-between">
@@ -377,7 +375,6 @@ const users = async () => {
         document.getElementById("user-modal-panel").innerHTML += Spinner();
         const formData = Object.fromEntries(new FormData(this));
         try {
-          // Use the signupUser handler for admin creation (simulate IP as 'admin')
           await signupUser(
             {
               ...formData,
@@ -457,12 +454,14 @@ const users = async () => {
           document.getElementById("confirm-delete").onclick = async () => {
             document.getElementById("user-modal-panel").innerHTML += Spinner();
             try {
-              // 1. Delete from Supabase Auth (admin)
-              await deleteSupabaseUser(user.id);
-              // 2. Delete from accounts (CASCADE)
+              // Delete all login_otps for this user first (to avoid FK constraint)
+              await supabase.from("login_otps").delete().eq("user_id", user.id);
+              // Delete from accounts (CASCADE)
               await supabase.from("accounts").delete().eq("user_id", user.id);
-              // 3. Delete from profiles (CASCADE)
+              // Delete from profiles (CASCADE)
               await supabase.from("profiles").delete().eq("id", user.id);
+              // Delete from Supabase Auth (admin)
+              await deleteSupabaseUser(user.id);
               await sendEmail({
                 to: user.email,
                 subject: "Profile Deleted",
