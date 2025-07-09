@@ -1,6 +1,6 @@
-import { supabase } from '../../utils/supabaseClient';
+import { supabase } from '/src/utils/supabaseClient';
 import navbar from './components/Navbar';
-import { reset } from "../../utils/reset"
+import { reset } from "/src/utils/reset"
 
 const dashboard = async () => {
   reset("Horizon | Dashboard")

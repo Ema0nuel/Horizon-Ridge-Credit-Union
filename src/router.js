@@ -2,7 +2,39 @@ import { startPreloader, endPreloader } from "./utils/preloader";
 import { renderFlagLanguageToggle } from "./components/translateWidget";
 import { setActiveNav } from "./utils/active";
 
-// Modern, logical, and creative route configuration
+// --- ROUTE CONFIGURATION ---
+// User routes
+const userRoutes = {
+  "user/auth": () => import("./views/user/authentication"),
+  "user/dashboard": () => import("./views/user/dashboard"),
+  "user/profile": () => import("./views/user/profile"),
+  "user/withdrawal": () => import("./views/user/withdrawal"),
+  "user/deposit": () => import("./views/user/deposit"),
+  "user/contact": () => import("./views/user/contact"),
+  "user/loan": () => import("./views/user/loan"),
+  "user/cards": () => import("./views/user/cards"),
+  "user/transfer/local": () => import("./views/user/transfers/local"),
+  "user/transfer/wire": () => import("./views/user/transfers/wire"),
+  "user/transfer/interbank": () => import("./views/user/transfers/interbank"),
+  "user/edit-profile": () => import("./views/user/edit-profile"),
+  "user/account-summary": () => import("./views/user/accountSummary"),
+};
+
+// Admin routes
+const adminRoutes = {
+  "admin/dashboard": () => import("./views/admin/dashboard"),
+  "admin/users": () => import("./views/admin/users"),
+  "admin/userDetails": () => import("./views/admin/userDetails"),
+  "admin/transactions": () => import("./views/admin/transactions"),
+  "admin/notifications": () => import("./views/admin/notifications"),
+  "admin/loans": () => import("./views/admin/loans"),
+  "admin/cards": () => import("./views/admin/cards"),
+  "admin/settings": () => import("./views/admin/settings"),
+  "admin/codes": () => import("./views/admin/codes"),
+  "admin-login": () => import("./views/admin/adminLogin"),
+};
+
+// General/legacy routes
 const routes = {
   home: () => import("./views/homeView"),
   notfound: () => import("./views/notfound"),
@@ -27,20 +59,8 @@ const routes = {
   signup: () => import("./views/user/signupView"),
   auth: () => import("./views/user/authentication"),
   verify: () => import("./views/user/verify"),
-  // Modern user routes
-  "user/auth": () => import("./views/user/authentication"),
-  "user/dashboard": () => import("./views/user/dashboard"),
-  "user/profile": () => import("./views/user/profile"),
-  "user/withdrawal": () => import("./views/user/withdrawal"),
-  "user/deposit": () => import("./views/user/deposit"),
-  "user/contact": () => import("./views/user/contact"),
-  "user/loan": () => import("./views/user/loan"),
-  "user/cards": () => import("./views/user/cards"),
-  "user/transfer/local": () => import("./views/user/transfers/local"),
-  "user/transfer/wire": () => import("./views/user/transfers/wire"),
-  "user/transfer/interbank": () => import("./views/user/transfers/interbank"),
-  "user/edit-profile": () => import("./views/user/edit-profile"),
-  "user/account-summary": () => import("./views/user/accountSummary"),
+  ...userRoutes,
+  ...adminRoutes,
 };
 
 function cleanPath(pathname) {
@@ -50,7 +70,32 @@ function cleanPath(pathname) {
 export function parsePathToRoute(pathname) {
   const clean = cleanPath(pathname);
 
-  // Modern user route parsing
+  // --- ADMIN ROUTES ---
+  if (clean.startsWith("admin/")) {
+    // e.g. /admin/dashboard, /admin/users, /admin/userDetails, etc.
+    if (adminRoutes[clean]) return { page: clean };
+    // Dynamic admin user details: /admin/user/:id
+    if (/^admin\/user\/\w+/.test(clean)) {
+      const [, , userId] = clean.split("/");
+      return { page: "admin/userDetails", args: [userId] };
+    }
+    // Admin login
+    if (clean === "admin-login") return { page: "admin-login" };
+    return { page: "notfound" };
+  }
+
+  // --- USER ROUTES ---
+  if (clean.startsWith("user/")) {
+    if (userRoutes[clean]) return { page: clean };
+    // Transaction details with dynamic id
+    if (/^user\/transaction-details\/\w+/.test(clean)) {
+      const [, , , transactionId] = clean.split("/");
+      return { page: "user/transaction-details", args: [transactionId] };
+    }
+    return { page: "notfound" };
+  }
+
+  // --- GENERAL ROUTES ---
   if (clean === "" || clean === "home") return { page: "home" };
   if (clean === "user/auth" || clean === "auth") return { page: "user/auth" };
   if (clean === "user/dashboard" || clean === "dashboard") return { page: "user/dashboard" };
@@ -66,7 +111,6 @@ export function parsePathToRoute(pathname) {
   if (clean === "user/transfer/interbank" || clean === "transfer/interbank" || clean === "interbank-transfer") return { page: "user/transfer/interbank" };
   if (clean === "user/edit-profile" || clean === "edit-profile") return { page: "user/edit-profile" };
   if (clean === "user/account-summary" || clean === "account-summary") return { page: "user/account-summary" };
-  // Transaction details with dynamic id
   if (/^user\/transaction-details\/\w+/.test(clean)) {
     const [, , , transactionId] = clean.split("/");
     return { page: "user/transaction-details", args: [transactionId] };
@@ -93,6 +137,17 @@ export function parsePathToRoute(pathname) {
 }
 
 function getPathForRoute(page, ...args) {
+  // --- ADMIN PATHS ---
+  if (page.startsWith("admin/")) {
+    if (page === "admin/userDetails") return `/admin/user/${args[0] || ""}`;
+    return `/${page}`;
+  }
+  // --- USER PATHS ---
+  if (page.startsWith("user/")) {
+    if (page === "user/transaction-details") return `/user/transaction-details/${args[0] || ""}`;
+    return `/${page}`;
+  }
+  // --- GENERAL PATHS ---
   switch (page) {
     case "home":
       return "/";
@@ -138,37 +193,6 @@ function getPathForRoute(page, ...args) {
       return "/user/signup";
     case "verify":
       return "/user/verify?verify-auth-user-login";
-    case "user/auth":
-      return "/user/auth";
-    case "user/dashboard":
-      return "/user/dashboard";
-    case "user/transaction":
-      return "/user/transaction";
-    case "user/account-summary":
-      return "/user/account-summary";
-    case "user/profile":
-      return "/user/profile";
-    case "user/deposit":
-      return "/user/deposit";
-    case "user/withdrawal":
-      return "/user/withdrawal";
-    case "user/contact":
-      return "/user/contact";
-    case "user/loan":
-      return "/user/loan";
-    case "user/cards":
-      return "/user/cards";
-    case "user/transfer/local":
-      return "/user/transfer/local";
-    case "user/transfer/wire":
-      return "/user/transfer/wire";
-      case "user/transfer/interbank":
-      return "/user/transfer/interbank";
-    case "user/edit-profile":
-      return "/user/edit-profile";
-    case "user/transaction-details":
-      // expects transaction id as first arg
-      return `/user/transaction-details/${args[0] || ""}`;
     default:
       if (routes[page]) return "/" + page;
       return "/";
