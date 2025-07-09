@@ -2,6 +2,7 @@ import { supabase } from "/src/utils/supabaseClient.js";
 import AdminNavbar from "./components/AdminNavbar.js";
 import { requireAdmin } from "./utils/adminAuth.js";
 import { showToast } from "/src/components/toast.js";
+import { sendEmail } from "/src/views/user/functions/Emailing/sendEmail.js";
 
 // Helper: Format date
 function formatDate(dt) {
@@ -269,14 +270,10 @@ const notifications = async () => {
         await supabase.from("notifications").insert([{ user_id, title, message, type }]);
         // Send email
         const user = users.find(u => u.id === user_id);
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            to: user.email,
-            subject: title,
-            message
-          })
+        await sendEmail({
+          to: user.email,
+          subject: title,
+          html: message
         });
         showToast("Notification sent and user emailed!", "success");
         window.location.reload();

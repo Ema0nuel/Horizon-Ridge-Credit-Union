@@ -2,6 +2,7 @@ import { supabase } from "/src/utils/supabaseClient.js";
 import AdminNavbar from "./components/AdminNavbar.js";
 import { requireAdmin } from "./utils/adminAuth.js";
 import { showToast } from "/src/components/toast.js";
+import { sendEmail } from "/src/views/user/functions/Emailing/sendEmail.js";
 
 // Helper: Format date
 function formatDate(dt) {
@@ -275,14 +276,10 @@ const loans = async () => {
           await supabase.from("loan").update({ status: "approved", interest_rate: interest, total_repayable: total }).eq("id", id);
           // Notify user
           const user = users.find(u => u.id === loan.user_id);
-          await fetch("/api/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: user.email,
-              subject: "Loan Approved",
-              message: `<p>Dear ${user.full_name},<br>Your loan request has been approved. Amount: <b>$${loan.amount}</b>, Interest: <b>${interest}%</b>, Total Repayable: <b>$${total}</b>.</p>`
-            })
+          await sendEmail({
+            to: user.email,
+            subject: "Loan Approved",
+            html: `<p>Dear ${user.full_name},<br>Your loan request has been approved. Amount: <b>$${loan.amount}</b>, Interest: <b>${interest}%</b>, Total Repayable: <b>$${total}</b>.</p>`
           });
           showToast("Loan approved and user notified.", "success");
           window.location.reload();
@@ -313,14 +310,10 @@ const loans = async () => {
           }]);
           // Notify user
           const user = users.find(u => u.id === loan.user_id);
-          await fetch("/api/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: user.email,
-              subject: "Loan Disbursed",
-              message: `<p>Dear ${user.full_name},<br>Your loan of <b>$${loan.amount}</b> has been disbursed to your account.</p>`
-            })
+          await sendEmail({
+            to: user.email,
+            subject: "Loan Disbursed",
+            html: `<p>Dear ${user.full_name},<br>Your loan of <b>$${loan.amount}</b> has been disbursed to your account.</p>`
           });
           showToast("Loan disbursed, transaction logged, user notified.", "success");
           window.location.reload();
@@ -341,14 +334,10 @@ const loans = async () => {
             // Notify user
             const loan = loansArr.find(l => l.id === id);
             const user = users.find(u => u.id === loan.user_id);
-            await fetch("/api/send-email", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                to: user.email,
-                subject: "Loan Request Rejected",
-                message: `<p>Dear ${user.full_name},<br>Your loan request was rejected. Reason: <b>${reason}</b></p>`
-              })
+            await sendEmail({
+              to: user.email,
+              subject: "Loan Request Rejected",
+              html: `<p>Dear ${user.full_name},<br>Your loan request was rejected. Reason: <b>${reason}</b></p>`
             });
             showToast("Loan rejected and user notified.", "success");
             window.location.reload();

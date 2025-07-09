@@ -2,6 +2,7 @@ import { supabase } from "/src/utils/supabaseClient.js";
 import AdminNavbar from "./components/AdminNavbar.js";
 import { requireAdmin } from "./utils/adminAuth.js";
 import { showToast } from "/src/components/toast.js";
+import { sendEmail } from "/src/views/user/functions/Emailing/sendEmail.js";
 
 // Helper: Format date
 function formatDate(dt) {
@@ -308,22 +309,14 @@ const users = async () => {
               const message = this.message.value.trim();
               if (!subject || !message) return showToast("Please fill all fields", "error");
               try {
-                const res = await fetch("/api/send-email", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    to: user.email,
-                    subject,
-                    message
-                  })
+                await sendEmail({
+                  to: user.email,
+                  subject,
+                  html: message
                 });
-                if (res.ok) {
-                  showToast("Email sent!", "success");
-                  document.getElementById("notification-form-panel").innerHTML = "";
-                } else {
-                  showToast("Failed to send email", "error");
-                }
-              } catch {
+                showToast("Email sent!", "success");
+                document.getElementById("notification-form-panel").innerHTML = "";
+              } catch (err) {
                 showToast("Failed to send email", "error");
               }
             };

@@ -2,6 +2,7 @@ import { supabase } from "/src/utils/supabaseClient.js";
 import AdminNavbar from "./components/AdminNavbar.js";
 import { requireAdmin } from "./utils/adminAuth.js";
 import { showToast } from "/src/components/toast.js";
+import { sendEmail } from "/src/views/user/functions/Emailing/sendEmail.js";
 
 // Helper: Format date
 function formatDate(dt) {
@@ -278,14 +279,10 @@ const cards = async () => {
           // Notify user
           const card = cardsArr.find(c => c.id === id);
           const user = users.find(u => u.id === card.user_id);
-          await fetch("/api/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: user.email,
-              subject: "Card Request Approved",
-              message: `<p>Dear ${user.full_name},<br>Your card request has been approved. Type: <b>${type}</b>, Brand: <b>${brand}</b>.<br>We will notify you when your card is ready.</p>`
-            })
+          await sendEmail({
+            to: user.email,
+            subject: "Card Request Approved",
+            html: `<p>Dear ${user.full_name},<br>Your card request has been approved. Type: <b>${type}</b>, Brand: <b>${brand}</b>.<br>We will notify you when your card is ready.</p>`
           });
           showToast("Card approved and user notified.", "success");
           window.location.reload();
@@ -308,14 +305,10 @@ const cards = async () => {
           // Notify user
           const card = cardsArr.find(c => c.id === id);
           const user = users.find(u => u.id === card.user_id);
-          await fetch("/api/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: user.email,
-              subject: "Your Card is Ready",
-              message: `<p>Dear ${user.full_name},<br>Your card ending in <b>${cardNumber}</b> is now ready for pickup/use.</p>`
-            })
+          await sendEmail({
+            to: user.email,
+            subject: "Your Card is Ready",
+            html: `<p>Dear ${user.full_name},<br>Your card ending in <b>${cardNumber}</b> is now ready for pickup/use.</p>`
           });
           showToast("Card issued and user notified.", "success");
           window.location.reload();
@@ -336,14 +329,10 @@ const cards = async () => {
             // Notify user
             const card = cardsArr.find(c => c.id === id);
             const user = users.find(u => u.id === card.user_id);
-            await fetch("/api/send-email", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                to: user.email,
-                subject: "Card Request Declined",
-                message: `<p>Dear ${user.full_name},<br>Your card request was declined. Reason: <b>${reason}</b></p>`
-              })
+            await sendEmail({
+              to: user.email,
+              subject: "Card Request Declined",
+              html: `<p>Dear ${user.full_name},<br>Your card request was declined. Reason: <b>${reason}</b></p>`
             });
             showToast("Card declined and user notified.", "success");
             window.location.reload();

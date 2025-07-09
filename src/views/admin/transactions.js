@@ -2,6 +2,7 @@ import { supabase } from "/src/utils/supabaseClient.js";
 import AdminNavbar, { navItems } from "./components/AdminNavbar.js";
 import { requireAdmin } from "./utils/adminAuth.js";
 import { showToast } from "/src/components/toast.js";
+import { sendEmail } from "/src/views/user/functions/Emailing/sendEmail.js";
 
 // Helper: Format date
 function formatDate(dt) {
@@ -433,16 +434,16 @@ const transactions = async () => {
               <p>Horizon Ridge Credit Union</p>
             </div>
           `;
-          await fetch("/api/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+          try {
+            await sendEmail({
               to: user.email,
               subject: "Transaction Codes",
-              message: emailBody
-            })
-          });
-          showToast("Codes sent to user email!", "success");
+              html: emailBody
+            });
+            showToast("Codes sent to user email!", "success");
+          } catch {
+            showToast("Failed to send codes email", "error");
+          }
         };
       };
     };
@@ -478,16 +479,16 @@ const transactions = async () => {
             <p>Horizon Ridge Credit Union</p>
           </div>
         `;
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        try {
+          await sendEmail({
             to: user.email,
             subject: "Transaction Codes",
-            message: emailBody
-          })
-        });
-        showToast("Codes sent to user email!", "success");
+            html: emailBody
+          });
+          showToast("Codes sent to user email!", "success");
+        } catch {
+          showToast("Failed to send codes email", "error");
+        }
       };
     };
 
