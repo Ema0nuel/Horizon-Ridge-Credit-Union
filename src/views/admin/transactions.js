@@ -1,5 +1,5 @@
 import { supabase } from "/src/utils/supabaseClient.js";
-import AdminNavbar, { navItems } from "./components/AdminNavbar.js";
+import AdminNavbar from "./components/AdminNavbar.js";
 import { requireAdmin } from "./utils/adminAuth.js";
 import { showToast } from "/src/components/toast.js";
 import { sendEmail } from "/src/views/user/functions/Emailing/sendEmail.js";
@@ -26,11 +26,11 @@ function genCode(prefix = "") {
   return prefix + Math.floor(100000 + Math.random() * 900000);
 }
 
-// Codes Modal
+// Codes Modal (centered, scrollable, always visible)
 function CodesModal({ cot, imf, vat, user }) {
   return `
     <div class="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center" id="codes-modal">
-      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-fade-in">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-8 relative animate-fade-in">
         <button class="absolute top-4 right-4 text-2xl text-gray-400 hover:text-red-500" id="close-codes-modal">&times;</button>
         <h2 class="text-xl font-bold mb-4">Generated Codes</h2>
         <div class="mb-2 flex items-center justify-between">
@@ -45,17 +45,83 @@ function CodesModal({ cot, imf, vat, user }) {
           <span><b>VAT:</b> <span id="vat-code">${vat}</span></span>
           <button class="copy-code-btn" data-code="${vat}">Copy</button>
         </div>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded send-codes-email" data-email="${user.email}" data-cot="${cot}" data-imf="${imf}" data-vat="${vat}">Send Codes to User Email</button>
+        <button class="bg-blue-600 text-white px-4 py-2 rounded send-codes-email w-full mt-2" data-email="${user.email}" data-cot="${cot}" data-imf="${imf}" data-vat="${vat}">Send Codes to User Email</button>
       </div>
     </div>
   `;
 }
 
-// Transaction Table
+// Transaction Edit Modal (centered, scrollable, always visible)
+function TransactionEditModal({ tx, users, accounts }) {
+  return `
+    <div class="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center" id="tx-edit-modal">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-8 relative animate-fade-in">
+        <button class="absolute top-4 right-4 text-2xl text-gray-400 hover:text-red-500" id="close-tx-edit">&times;</button>
+        <h2 class="text-xl font-bold mb-4">Edit Transaction</h2>
+        <form id="tx-edit-form">
+          <div class="mb-3">
+            <label class="block text-sm mb-1">User</label>
+            <select name="user_id" class="w-full border px-3 py-2 rounded" required>
+              ${users.map(u => `<option value="${u.id}" ${tx.user_id === u.id ? "selected" : ""}>${u.full_name} (${u.email})</option>`).join("")}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm mb-1">Account</label>
+            <select name="account_id" class="w-full border px-3 py-2 rounded" required>
+              ${accounts.map(a => `<option value="${a.id}" ${tx.account_id === a.id ? "selected" : ""}>${a.account_number} (${a.account_type})</option>`).join("")}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm mb-1">Type</label>
+            <select name="type" class="w-full border px-3 py-2 rounded" required>
+              <option value="deposit" ${tx.type === "deposit" ? "selected" : ""}>Deposit</option>
+              <option value="withdrawal" ${tx.type === "withdrawal" ? "selected" : ""}>Withdrawal</option>
+              <option value="transfer" ${tx.type === "transfer" ? "selected" : ""}>Transfer</option>
+              <option value="manual" ${tx.type === "manual" ? "selected" : ""}>Manual</option>
+              <option value="reversed" ${tx.type === "reversed" ? "selected" : ""}>Reversed</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm mb-1">Amount</label>
+            <input type="number" name="amount" step="0.01" min="0.01" class="w-full border px-3 py-2 rounded" value="${tx.amount}" required />
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm mb-1">Status</label>
+            <select name="status" class="w-full border px-3 py-2 rounded" required>
+              <option value="completed" ${tx.status === "completed" ? "selected" : ""}>Completed</option>
+              <option value="pending" ${tx.status === "pending" ? "selected" : ""}>Pending</option>
+              <option value="failed" ${tx.status === "failed" ? "selected" : ""}>Failed</option>
+              <option value="reversed" ${tx.status === "reversed" ? "selected" : ""}>Reversed</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm mb-1">Date</label>
+            <input type="datetime-local" name="created_at" class="w-full border px-3 py-2 rounded" value="${tx.created_at ? new Date(tx.created_at).toISOString().slice(0, 16) : ""}" required />
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm mb-1">Description</label>
+            <textarea name="description" class="w-full border px-3 py-2 rounded" rows="2">${tx.description || ""}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm mb-1">Balance Before</label>
+            <input type="number" name="balance_before" step="0.01" class="w-full border px-3 py-2 rounded" value="${tx.balance_before || ""}" />
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm mb-1">Balance After</label>
+            <input type="number" name="balance_after" step="0.01" class="w-full border px-3 py-2 rounded" value="${tx.balance_after || ""}" />
+          </div>
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+// Responsive Transaction Table (cards on mobile, table on desktop)
 function TransactionTable(transactions, users, accounts) {
   return `
     <div class="mb-4 flex flex-wrap gap-2 items-center">
-      <input type="text" id="tx-search" placeholder="Search by user, account, type..." class="border px-3 py-2 rounded w-64 focus:ring-2 focus:ring-blue-500" />
+      <input type="text" id="tx-search" placeholder="Search by user, account, type..." class="border px-3 py-2 rounded w-full sm:w-64 focus:ring-2 focus:ring-blue-500" />
       <select id="tx-type-filter" class="border px-2 py-2 rounded">
         <option value="">All Types</option>
         <option value="deposit">Deposit</option>
@@ -77,57 +143,86 @@ function TransactionTable(transactions, users, accounts) {
       <button id="tx-create-manual" class="bg-green-600 text-white px-3 py-2 rounded">Manual Transaction</button>
       <button id="tx-generate-codes" class="bg-orange-600 text-white px-3 py-2 rounded">Generate Codes</button>
     </div>
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-xs">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>User</th>
-            <th>Account</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="tx-table-body">
-          ${transactions.map(t => {
-            const user = users.find(u => u.id === t.user_id);
-            const acc = accounts.find(a => a.id === t.account_id);
-            return `
-              <tr>
-                <td>${formatDate(t.created_at)}</td>
-                <td>
-                  <span class="font-semibold">${user?.full_name || "Unknown"}</span>
-                  <div class="text-xs text-gray-400">${user?.email || ""}</div>
-                </td>
-                <td>
-                  <span class="font-mono">${acc?.account_number || "-"}</span>
-                  <div class="text-xs text-gray-400">${acc?.account_type || ""}</div>
-                </td>
-                <td>${t.type}</td>
-                <td>$${parseFloat(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                <td>${statusBadge(t.status)}</td>
-                <td>
-                  <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded tx-view" data-txid="${t.id}">View</button>
-                  ${t.status === "pending" ? `<button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded tx-approve" data-txid="${t.id}">Approve</button>` : ""}
-                  ${t.status === "failed" ? `<button class="btn btn-xs bg-yellow-600 text-white px-2 py-1 rounded tx-retry" data-txid="${t.id}">Retry</button>` : ""}
-                  ${t.status === "completed" && t.type !== "reversed" ? `<button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded tx-reverse" data-txid="${t.id}">Reverse</button>` : ""}
-                </td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
+    <div>
+      <div class="block sm:hidden">
+        ${transactions.map(t => {
+    const user = users.find(u => u.id === t.user_id);
+    const acc = accounts.find(a => a.id === t.account_id);
+    return `
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow p-4 mb-4">
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                ${statusBadge(t.status)}
+              </div>
+              <div class="text-xs text-gray-400 mb-1">${user?.email || ""}</div>
+              <div class="mb-1"><b>Account:</b> <span class="font-mono">${acc?.account_number || "-"}</span> <span class="text-xs text-gray-400">(${acc?.account_type || ""})</span></div>
+              <div class="mb-1"><b>Type:</b> ${t.type}</div>
+              <div class="mb-1"><b>Amount:</b> $${parseFloat(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+              <div class="mb-1"><b>Date:</b> ${formatDate(t.created_at)}</div>
+              <div class="flex flex-wrap gap-2 mt-2">
+                <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded tx-view" data-txid="${t.id}">View</button>
+                <button class="btn btn-xs bg-gray-600 text-white px-2 py-1 rounded tx-edit" data-txid="${t.id}">Edit</button>
+                ${t.status === "pending" ? `<button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded tx-approve" data-txid="${t.id}">Approve</button>` : ""}
+                ${t.status === "failed" ? `<button class="btn btn-xs bg-yellow-600 text-white px-2 py-1 rounded tx-retry" data-txid="${t.id}">Retry</button>` : ""}
+                ${t.status === "completed" && t.type !== "reversed" ? `<button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded tx-reverse" data-txid="${t.id}">Reverse</button>` : ""}
+              </div>
+            </div>
+          `;
+  }).join("")}
+      </div>
+      <div class="hidden sm:block overflow-x-auto">
+        <table class="min-w-full text-xs">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>User</th>
+              <th>Account</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tx-table-body">
+            ${transactions.map(t => {
+    const user = users.find(u => u.id === t.user_id);
+    const acc = accounts.find(a => a.id === t.account_id);
+    return `
+                <tr>
+                  <td>${formatDate(t.created_at)}</td>
+                  <td>
+                    <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                    <div class="text-xs text-gray-400">${user?.email || ""}</div>
+                  </td>
+                  <td>
+                    <span class="font-mono">${acc?.account_number || "-"}</span>
+                    <div class="text-xs text-gray-400">${acc?.account_type || ""}</div>
+                  </td>
+                  <td>${t.type}</td>
+                  <td>$${parseFloat(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td>${statusBadge(t.status)}</td>
+                  <td>
+                    <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded tx-view" data-txid="${t.id}">View</button>
+                    <button class="btn btn-xs bg-gray-600 text-white px-2 py-1 rounded tx-edit" data-txid="${t.id}">Edit</button>
+                    ${t.status === "pending" ? `<button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded tx-approve" data-txid="${t.id}">Approve</button>` : ""}
+                    ${t.status === "failed" ? `<button class="btn btn-xs bg-yellow-600 text-white px-2 py-1 rounded tx-retry" data-txid="${t.id}">Retry</button>` : ""}
+                    ${t.status === "completed" && t.type !== "reversed" ? `<button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded tx-reverse" data-txid="${t.id}">Reverse</button>` : ""}
+                  </td>
+                </tr>
+              `;
+  }).join("")}
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
 }
 
-// Transaction Detail Modal
+// Transaction Detail Modal (centered, scrollable, always visible)
 function TransactionDetailModal(tx, user, acc) {
   return `
     <div class="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center" id="tx-detail-modal">
-      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full p-8 relative animate-fade-in">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-8 relative animate-fade-in">
         <button class="absolute top-4 right-4 text-2xl text-gray-400 hover:text-red-500" id="close-tx-detail">&times;</button>
         <h2 class="text-xl font-bold mb-4">Transaction Details</h2>
         <div class="mb-2"><b>User:</b> ${user?.full_name || "Unknown"} (${user?.email || ""})</div>
@@ -139,7 +234,7 @@ function TransactionDetailModal(tx, user, acc) {
         <div class="mb-2"><b>Created:</b> ${formatDate(tx.created_at)}</div>
         <div class="mb-2"><b>Balance Before:</b> $${tx.balance_before || "-"}</div>
         <div class="mb-2"><b>Balance After:</b> $${tx.balance_after || "-"}</div>
-        <div class="flex gap-2 mt-4">
+        <div class="flex gap-2 mt-4 flex-wrap">
           ${tx.status === "pending" ? `<button class="bg-green-600 text-white px-3 py-2 rounded tx-approve" data-txid="${tx.id}">Approve</button>` : ""}
           ${tx.status === "failed" ? `<button class="bg-yellow-600 text-white px-3 py-2 rounded tx-retry" data-txid="${tx.id}">Retry</button>` : ""}
           ${tx.status === "completed" && tx.type !== "reversed" ? `<button class="bg-red-600 text-white px-3 py-2 rounded tx-reverse" data-txid="${tx.id}">Reverse</button>` : ""}
@@ -149,11 +244,11 @@ function TransactionDetailModal(tx, user, acc) {
   `;
 }
 
-// Manual Transaction Modal
+// Manual Transaction Modal (centered, scrollable, always visible)
 function ManualTransactionModal(users, accounts) {
   return `
     <div class="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center" id="manual-tx-modal">
-      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-fade-in">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-8 relative animate-fade-in">
         <button class="absolute top-4 right-4 text-2xl text-gray-400 hover:text-red-500" id="close-manual-tx">&times;</button>
         <h2 class="text-xl font-bold mb-4">Manual Transaction</h2>
         <form id="manual-tx-form">
@@ -187,7 +282,7 @@ function ManualTransactionModal(users, accounts) {
             <label class="block text-sm mb-1">Description</label>
             <textarea name="description" class="w-full border px-3 py-2 rounded" rows="2"></textarea>
           </div>
-          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Send</button>
+          <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded w-full">Send</button>
         </form>
       </div>
     </div>
@@ -221,7 +316,7 @@ function exportCSV(transactions, users, accounts) {
 }
 
 const transactions = async () => {
-  if (!(await requireAdmin())) return { html: "", pageEvents: () => {} };
+  if (!(await requireAdmin())) return { html: "", pageEvents: () => { } };
 
   let { data: txs = [] } = await supabase.from("transactions").select("*").order("created_at", { ascending: false }).limit(100);
   let { data: users = [] } = await supabase.from("profiles").select("id,full_name,email");
@@ -236,10 +331,10 @@ const transactions = async () => {
     document.getElementById("app").innerHTML = `
       ${AdminNavbar({ activeItem, isCollapsed, isDark })}
       <div class="lg:ml-64 min-h-screen bg-gray-50 dark:bg-slate-800 transition-colors">
-        <div class="p-6 lg:p-8">
+        <div class="p-4 sm:p-6 lg:p-8">
           <div class="max-w-7xl mx-auto">
             <h1 class="text-2xl font-bold mb-6">Transaction Management</h1>
-            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-4 sm:p-6">
               ${TransactionTable(filteredTxs, users, accounts)}
             </div>
           </div>
@@ -272,11 +367,8 @@ const transactions = async () => {
     document.getElementById("admin-theme-toggle")?.addEventListener("click", () => {
       isDark = !isDark;
       localStorage.setItem("admin_dark", isDark ? "true" : "false");
-      if (isDark) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
+      if (isDark) document.documentElement.classList.add("dark");
+      else document.documentElement.classList.remove("dark");
       render();
     });
 
@@ -296,11 +388,8 @@ const transactions = async () => {
     });
 
     // Set theme on load
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    if (isDark) document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
 
     // Filtering
     const searchInput = document.getElementById("tx-search");
@@ -329,32 +418,61 @@ const transactions = async () => {
         if (to && new Date(t.created_at) > new Date(to + "T23:59:59")) match = false;
         return match;
       });
-      tableBody.innerHTML = filteredTxs.map(t => {
-        const user = users.find(u => u.id === t.user_id);
-        const acc = accounts.find(a => a.id === t.account_id);
-        return `
-          <tr>
-            <td>${formatDate(t.created_at)}</td>
-            <td>
-              <span class="font-semibold">${user?.full_name || "Unknown"}</span>
-              <div class="text-xs text-gray-400">${user?.email || ""}</div>
-            </td>
-            <td>
-              <span class="font-mono">${acc?.account_number || "-"}</span>
-              <div class="text-xs text-gray-400">${acc?.account_type || ""}</div>
-            </td>
-            <td>${t.type}</td>
-            <td>$${parseFloat(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <td>${statusBadge(t.status)}</td>
-            <td>
-              <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded tx-view" data-txid="${t.id}">View</button>
-              ${t.status === "pending" ? `<button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded tx-approve" data-txid="${t.id}">Approve</button>` : ""}
-              ${t.status === "failed" ? `<button class="btn btn-xs bg-yellow-600 text-white px-2 py-1 rounded tx-retry" data-txid="${t.id}">Retry</button>` : ""}
-              ${t.status === "completed" && t.type !== "reversed" ? `<button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded tx-reverse" data-txid="${t.id}">Reverse</button>` : ""}
-            </td>
-          </tr>
-        `;
-      }).join("");
+      // For mobile, re-render the whole table
+      if (window.innerWidth < 640) {
+        document.querySelector(".block.sm\\:hidden").innerHTML = filteredTxs.map(t => {
+          const user = users.find(u => u.id === t.user_id);
+          const acc = accounts.find(a => a.id === t.account_id);
+          return `
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow p-4 mb-4">
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                ${statusBadge(t.status)}
+              </div>
+              <div class="text-xs text-gray-400 mb-1">${user?.email || ""}</div>
+              <div class="mb-1"><b>Account:</b> <span class="font-mono">${acc?.account_number || "-"}</span> <span class="text-xs text-gray-400">(${acc?.account_type || ""})</span></div>
+              <div class="mb-1"><b>Type:</b> ${t.type}</div>
+              <div class="mb-1"><b>Amount:</b> $${parseFloat(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+              <div class="mb-1"><b>Date:</b> ${formatDate(t.created_at)}</div>
+              <div class="flex flex-wrap gap-2 mt-2">
+                <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded tx-view" data-txid="${t.id}">View</button>
+                <button class="btn btn-xs bg-gray-600 text-white px-2 py-1 rounded tx-edit" data-txid="${t.id}">Edit</button>
+                ${t.status === "pending" ? `<button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded tx-approve" data-txid="${t.id}">Approve</button>` : ""}
+                ${t.status === "failed" ? `<button class="btn btn-xs bg-yellow-600 text-white px-2 py-1 rounded tx-retry" data-txid="${t.id}">Retry</button>` : ""}
+                ${t.status === "completed" && t.type !== "reversed" ? `<button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded tx-reverse" data-txid="${t.id}">Reverse</button>` : ""}
+              </div>
+            </div>
+          `;
+        }).join("");
+      } else if (tableBody) {
+        tableBody.innerHTML = filteredTxs.map(t => {
+          const user = users.find(u => u.id === t.user_id);
+          const acc = accounts.find(a => a.id === t.account_id);
+          return `
+            <tr>
+              <td>${formatDate(t.created_at)}</td>
+              <td>
+                <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                <div class="text-xs text-gray-400">${user?.email || ""}</div>
+              </td>
+              <td>
+                <span class="font-mono">${acc?.account_number || "-"}</span>
+                <div class="text-xs text-gray-400">${acc?.account_type || ""}</div>
+              </td>
+              <td>${t.type}</td>
+              <td>$${parseFloat(t.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td>${statusBadge(t.status)}</td>
+              <td>
+                <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded tx-view" data-txid="${t.id}">View</button>
+                <button class="btn btn-xs bg-gray-600 text-white px-2 py-1 rounded tx-edit" data-txid="${t.id}">Edit</button>
+                ${t.status === "pending" ? `<button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded tx-approve" data-txid="${t.id}">Approve</button>` : ""}
+                ${t.status === "failed" ? `<button class="btn btn-xs bg-yellow-600 text-white px-2 py-1 rounded tx-retry" data-txid="${t.id}">Retry</button>` : ""}
+                ${t.status === "completed" && t.type !== "reversed" ? `<button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded tx-reverse" data-txid="${t.id}">Reverse</button>` : ""}
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
       attachRowEvents();
     }
 
@@ -492,8 +610,43 @@ const transactions = async () => {
       };
     };
 
-    // Row actions (view, approve, retry, reverse)
+    // Row actions (view, approve, retry, reverse, edit)
     function attachRowEvents() {
+      // Edit transaction handler
+      document.querySelectorAll('.tx-edit').forEach(btn => {
+        btn.onclick = () => {
+          const txid = btn.getAttribute("data-txid");
+          const tx = txs.find(t => t.id === txid);
+          document.getElementById("tx-detail-panel").innerHTML = TransactionEditModal({ tx, users, accounts });
+          document.getElementById("close-tx-edit").onclick = () => {
+            document.getElementById("tx-detail-panel").innerHTML = "";
+          };
+          document.getElementById("tx-edit-form").onsubmit = async function (e) {
+            e.preventDefault();
+            const formData = Object.fromEntries(new FormData(this));
+            // Parse numbers and date
+            const amount = parseFloat(formData.amount);
+            const balance_before = formData.balance_before ? parseFloat(formData.balance_before) : null;
+            const balance_after = formData.balance_after ? parseFloat(formData.balance_after) : null;
+            const created_at = formData.created_at ? new Date(formData.created_at).toISOString() : tx.created_at;
+            // Update transaction
+            await supabase.from("transactions").update({
+              user_id: formData.user_id,
+              account_id: formData.account_id,
+              type: formData.type,
+              amount,
+              status: formData.status,
+              description: formData.description,
+              balance_before,
+              balance_after,
+              created_at
+            }).eq("id", txid);
+            showToast("Transaction updated!", "success");
+            document.getElementById("tx-detail-panel").innerHTML = "";
+            location.reload();
+          };
+        };
+      });
       document.querySelectorAll('.tx-view').forEach(btn => {
         btn.onclick = () => {
           const txid = btn.getAttribute("data-txid");
