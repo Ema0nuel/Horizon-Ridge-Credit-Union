@@ -1,17 +1,47 @@
 import { supabase } from '../../../utils/supabaseClient';
 import { sendOtpEmail } from './Emailing/email';
 
+/**
+ * Login and send OTP.
+ * Accepts accessID as email, username, or account number.
+ */
 export async function loginAndSendOtp(accessID, password) {
-  // Find user by email or username
-  const { data: userData, error: userError } = await supabase
+  // Try to find user by email, username, or account number
+  let userData = null;
+  let userError = null;
+
+  // 1. Try email or username
+  let res = await supabase
     .from("profiles")
     .select("id, email, full_name")
     .or(`email.eq.${accessID},username.eq.${accessID}`)
     .maybeSingle();
-    
-    console.log(userError);
-  if (userError || !userData) throw new Error("Invalid credentials.");
 
+  userData = res.data;
+  userError = res.error;
+
+  // 2. If not found, try by account number
+  if ((!userData || userError) && accessID) {
+    // Find account by account_number
+    const { data: account, error: accError } = await supabase
+      .from("accounts")
+      .select("user_id")
+      .eq("account_number", accessID)
+      .maybeSingle();
+
+    if (account && account.user_id) {
+      // Get user profile by user_id
+      const { data: profile, error: profError } = await supabase
+        .from("profiles")
+        .select("id, email, full_name")
+        .eq("id", account.user_id)
+        .maybeSingle();
+      userData = profile;
+      userError = profError;
+    }
+  }
+
+  if (userError || !userData) throw new Error("Invalid credentials.");
 
   // Authenticate with Supabase Auth using email
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -19,7 +49,6 @@ export async function loginAndSendOtp(accessID, password) {
     password
   });
 
-  console.log(authError);
   if (authError || !authData?.user) throw new Error("Invalid credentials.");
 
   // Generate OTP

@@ -57,6 +57,7 @@ const loginView = async () => {
           }
           startLogoSpinner();
           try {
+            // Accepts email, username, or account number
             await loginAndSendOtp(accessID, password);
             showToast("OTP sent to your email.", "info");
             otpStep = true;
@@ -111,6 +112,7 @@ const loginView = async () => {
         }
         startLogoSpinner();
         try {
+          // Accepts email, username, or account number for resend
           await loginAndSendOtp(lastAccessID, ""); // Password not needed for resend if you adjust backend logic
           showToast("OTP resent to your email.", "info");
         } catch (err) {
@@ -147,7 +149,7 @@ const loginView = async () => {
                 <div id="login-credentials">
                   <div>
                     <label for="accessID" class="block text-sm font-medium text-brand-navy dark:text-brand-sun mb-1">Access ID</label>
-                    <input class="block w-full rounded-lg border border-brand-gray dark:border-brand-navy bg-brand-light dark:bg-brand-dark px-4 py-3 text-brand-navy dark:text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-sun transition" type="text" name="accessID" id="accessID" placeholder="Enter your Access ID" required>
+                    <input class="block w-full rounded-lg border border-brand-gray dark:border-brand-navy bg-brand-light dark:bg-brand-dark px-4 py-3 text-brand-navy dark:text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-sun transition" type="text" name="accessID" id="accessID" placeholder="Enter your Access ID (email, username, or account number)" required>
                   </div>
                   <div>
                     <label for="txt_pwd" class="block text-sm font-medium text-brand-navy dark:text-brand-sun mb-1">Password</label>
