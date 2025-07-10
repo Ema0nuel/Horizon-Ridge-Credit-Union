@@ -27,7 +27,7 @@ export async function verifyOtp(accessID, otp) {
                 .select("id, email, full_name")
                 .eq("id", account.user_id)
                 .maybeSingle();
-            userData = profile;
+            userData = profile; // Check
         }
     }
 
