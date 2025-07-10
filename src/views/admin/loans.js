@@ -21,10 +21,11 @@ function statusBadge(status) {
   return `<span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">${status}</span>`;
 }
 
+// Responsive Loan Table (cards on mobile, table on desktop)
 function LoanTable(loans, users) {
   return `
     <div class="mb-4 flex flex-wrap gap-2 items-center">
-      <input type="text" id="loan-search" placeholder="Search by user, amount, status..." class="border px-3 py-2 rounded w-64 focus:ring-2 focus:ring-blue-500" />
+      <input type="text" id="loan-search" placeholder="Search by user, amount, status..." class="border px-3 py-2 rounded w-full md:w-64" />
       <select id="loan-status-filter" class="border px-2 py-2 rounded">
         <option value="">All Status</option>
         <option value="pending">Pending</option>
@@ -35,48 +36,75 @@ function LoanTable(loans, users) {
       </select>
       <button id="loan-export-csv" class="ml-auto bg-blue-600 text-white px-3 py-2 rounded">Export CSV</button>
     </div>
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-xs">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>User</th>
-            <th>Amount</th>
-            <th>Interest</th>
-            <th>Total Repayable</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="loan-table-body">
-          ${loans.map(l => {
-            const user = users.find(u => u.id === l.user_id);
-            return `
-              <tr>
-                <td>${formatDate(l.created_at)}</td>
-                <td>
-                  <span class="font-semibold">${user?.full_name || "Unknown"}</span>
-                  <div class="text-xs text-gray-400">${user?.email || ""}</div>
-                </td>
-                <td>$${parseFloat(l.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                <td>${l.interest_rate ? l.interest_rate + "%" : "-"}</td>
-                <td>$${l.total_repayable ? parseFloat(l.total_repayable).toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}</td>
-                <td>${statusBadge(l.status)}</td>
-                <td>
-                  ${l.status === "pending" ? `
-                    <button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded loan-approve" data-id="${l.id}">Approve</button>
-                    <button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded loan-reject" data-id="${l.id}">Reject</button>
-                  ` : ""}
-                  ${l.status === "approved" ? `
-                    <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded loan-disburse" data-id="${l.id}">Disburse</button>
-                  ` : ""}
-                  <button class="btn btn-xs bg-gray-600 text-white px-2 py-1 rounded loan-view" data-id="${l.id}">View</button>
-                </td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
+    <div>
+      <div class="block md:hidden">
+        ${loans.map(l => {
+          const user = users.find(u => u.id === l.user_id);
+          return `
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow p-4 mb-4 animate-fade-in">
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                ${statusBadge(l.status)}
+              </div>
+              <div class="text-xs text-gray-400 mb-1">${user?.email || ""}</div>
+              <div class="mb-1"><b>Amount:</b> $${parseFloat(l.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+              <div class="mb-1"><b>Interest:</b> ${l.interest_rate ? l.interest_rate + "%" : "-"}</div>
+              <div class="mb-1"><b>Status:</b> ${statusBadge(l.status)}</div>
+              <div class="flex flex-wrap gap-2 mt-2">
+                ${l.status === "pending" ? `
+                  <button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded loan-approve" data-id="${l.id}">Approve</button>
+                  <button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded loan-reject" data-id="${l.id}">Reject</button>
+                ` : ""}
+                ${l.status === "approved" ? `
+                  <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded loan-disburse" data-id="${l.id}">Disburse</button>
+                ` : ""}
+                <button class="btn btn-xs bg-gray-600 text-white px-2 py-1 rounded loan-view" data-id="${l.id}">View</button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+      <div class="hidden md:block overflow-x-auto">
+        <table class="min-w-full text-xs">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>User</th>
+              <th>Amount</th>
+              <th>Interest</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="loan-table-body">
+            ${loans.map(l => {
+              const user = users.find(u => u.id === l.user_id);
+              return `
+                <tr>
+                  <td>${formatDate(l.created_at)}</td>
+                  <td>
+                    <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                    <div class="text-xs text-gray-400">${user?.email || ""}</div>
+                  </td>
+                  <td>$${parseFloat(l.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td>${l.interest_rate ? l.interest_rate + "%" : "-"}</td>
+                  <td>${statusBadge(l.status)}</td>
+                  <td>
+                    ${l.status === "pending" ? `
+                      <button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded loan-approve" data-id="${l.id}">Approve</button>
+                      <button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded loan-reject" data-id="${l.id}">Reject</button>
+                    ` : ""}
+                    ${l.status === "approved" ? `
+                      <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded loan-disburse" data-id="${l.id}">Disburse</button>
+                    ` : ""}
+                    <button class="btn btn-xs bg-gray-600 text-white px-2 py-1 rounded loan-view" data-id="${l.id}">View</button>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
 }
@@ -90,9 +118,7 @@ function LoanDetailModal(loan, user) {
         <div class="mb-2"><b>User:</b> ${user?.full_name || "Unknown"} (${user?.email || ""})</div>
         <div class="mb-2"><b>Amount:</b> $${parseFloat(loan.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
         <div class="mb-2"><b>Interest:</b> ${loan.interest_rate ? loan.interest_rate + "%" : "-"}</div>
-        <div class="mb-2"><b>Total Repayable:</b> $${loan.total_repayable ? parseFloat(loan.total_repayable).toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}</div>
         <div class="mb-2"><b>Status:</b> ${statusBadge(loan.status)}</div>
-        <div class="mb-2"><b>Reason:</b> ${loan.reason || "-"}</div>
         <div class="mb-2"><b>Created:</b> ${formatDate(loan.created_at)}</div>
       </div>
     </div>
@@ -119,7 +145,7 @@ function RejectReasonModal(loanId) {
 }
 
 function exportCSV(loans, users) {
-  const header = ["Date", "User", "Amount", "Interest", "Total Repayable", "Status"];
+  const header = ["Date", "User", "Amount", "Interest", "Status"];
   const rows = loans.map(l => {
     const user = users.find(u => u.id === l.user_id);
     return [
@@ -127,7 +153,6 @@ function exportCSV(loans, users) {
       user?.full_name || "",
       l.amount,
       l.interest_rate || "",
-      l.total_repayable || "",
       l.status
     ].join(",");
   });
@@ -157,10 +182,10 @@ const loans = async () => {
     document.getElementById("app").innerHTML = `
       ${AdminNavbar({ activeItem, isCollapsed, isDark })}
       <div class="lg:ml-64 min-h-screen bg-gray-50 dark:bg-slate-800 transition-colors">
-        <div class="p-6 lg:p-8">
+        <div class="p-4 md:p-8">
           <div class="max-w-7xl mx-auto">
             <h1 class="text-2xl font-bold mb-6">Loan Management</h1>
-            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-4 md:p-6">
               ${LoanTable(filteredLoans, users)}
             </div>
           </div>
@@ -217,32 +242,60 @@ const loans = async () => {
         if (status && l.status !== status) match = false;
         return match;
       });
-      tableBody.innerHTML = filteredLoans.map(l => {
-        const user = users.find(u => u.id === l.user_id);
-        return `
-          <tr>
-            <td>${formatDate(l.created_at)}</td>
-            <td>
-              <span class="font-semibold">${user?.full_name || "Unknown"}</span>
-              <div class="text-xs text-gray-400">${user?.email || ""}</div>
-            </td>
-            <td>$${parseFloat(l.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <td>${l.interest_rate ? l.interest_rate + "%" : "-"}</td>
-            <td>$${l.total_repayable ? parseFloat(l.total_repayable).toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}</td>
-            <td>${statusBadge(l.status)}</td>
-            <td>
-              ${l.status === "pending" ? `
-                <button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded loan-approve" data-id="${l.id}">Approve</button>
-                <button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded loan-reject" data-id="${l.id}">Reject</button>
-              ` : ""}
-              ${l.status === "approved" ? `
-                <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded loan-disburse" data-id="${l.id}">Disburse</button>
-              ` : ""}
-              <button class="btn btn-xs bg-gray-600 text-white px-2 py-1 rounded loan-view" data-id="${l.id}">View</button>
-            </td>
-          </tr>
-        `;
-      }).join("");
+      // For mobile, re-render the whole table
+      if (window.innerWidth < 768) {
+        document.querySelector(".block.md\\:hidden").innerHTML = filteredLoans.map(l => {
+          const user = users.find(u => u.id === l.user_id);
+          return `
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow p-4 mb-4 animate-fade-in">
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                ${statusBadge(l.status)}
+              </div>
+              <div class="text-xs text-gray-400 mb-1">${user?.email || ""}</div>
+              <div class="mb-1"><b>Amount:</b> $${parseFloat(l.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+              <div class="mb-1"><b>Interest:</b> ${l.interest_rate ? l.interest_rate + "%" : "-"}</div>
+              <div class="mb-1"><b>Status:</b> ${statusBadge(l.status)}</div>
+              <div class="flex flex-wrap gap-2 mt-2">
+                ${l.status === "pending" ? `
+                  <button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded loan-approve" data-id="${l.id}">Approve</button>
+                  <button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded loan-reject" data-id="${l.id}">Reject</button>
+                ` : ""}
+                ${l.status === "approved" ? `
+                  <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded loan-disburse" data-id="${l.id}">Disburse</button>
+                ` : ""}
+                <button class="btn btn-xs bg-gray-600 text-white px-2 py-1 rounded loan-view" data-id="${l.id}">View</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      } else if (tableBody) {
+        tableBody.innerHTML = filteredLoans.map(l => {
+          const user = users.find(u => u.id === l.user_id);
+          return `
+            <tr>
+              <td>${formatDate(l.created_at)}</td>
+              <td>
+                <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                <div class="text-xs text-gray-400">${user?.email || ""}</div>
+              </td>
+              <td>$${parseFloat(l.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td>${l.interest_rate ? l.interest_rate + "%" : "-"}</td>
+              <td>${statusBadge(l.status)}</td>
+              <td>
+                ${l.status === "pending" ? `
+                  <button class="btn btn-xs bg-green-600 text-white px-2 py-1 rounded loan-approve" data-id="${l.id}">Approve</button>
+                  <button class="btn btn-xs bg-red-600 text-white px-2 py-1 rounded loan-reject" data-id="${l.id}">Reject</button>
+                ` : ""}
+                ${l.status === "approved" ? `
+                  <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded loan-disburse" data-id="${l.id}">Disburse</button>
+                ` : ""}
+                <button class="btn btn-xs bg-gray-600 text-white px-2 py-1 rounded loan-view" data-id="${l.id}">View</button>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
       attachRowEvents();
     }
     [searchInput, statusFilter].forEach(el => {
@@ -271,15 +324,14 @@ const loans = async () => {
           const id = btn.getAttribute("data-id");
           const interest = prompt("Enter interest rate (%)", "5");
           if (!interest || isNaN(interest)) return showToast("Interest rate required", "error");
-          const loan = loansArr.find(l => l.id === id);
-          const total = parseFloat(loan.amount) + (parseFloat(loan.amount) * parseFloat(interest) / 100);
-          await supabase.from("loan").update({ status: "approved", interest_rate: interest, total_repayable: total }).eq("id", id);
+          await supabase.from("loan").update({ status: "approved", interest_rate: parseFloat(interest) }).eq("id", id);
           // Notify user
+          const loan = loansArr.find(l => l.id === id);
           const user = users.find(u => u.id === loan.user_id);
           await sendEmail({
             to: user.email,
             subject: "Loan Approved",
-            html: `<p>Dear ${user.full_name},<br>Your loan request has been approved. Amount: <b>$${loan.amount}</b>, Interest: <b>${interest}%</b>, Total Repayable: <b>$${total}</b>.</p>`
+            html: `<p>Dear ${user.full_name},<br>Your loan request has been approved. Amount: <b>$${loan.amount}</b>, Interest: <b>${interest}%</b>.</p>`
           });
           showToast("Loan approved and user notified.", "success");
           window.location.reload();

@@ -19,10 +19,11 @@ function typeBadge(type) {
   return `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Info</span>`;
 }
 
+// Responsive Notification Table (cards on mobile, table on desktop)
 function NotificationTable(notifications, users) {
   return `
     <div class="mb-4 flex flex-wrap gap-2 items-center">
-      <input type="text" id="notif-search" placeholder="Search by user, title, message..." class="border px-3 py-2 rounded w-64 focus:ring-2 focus:ring-blue-500" />
+      <input type="text" id="notif-search" placeholder="Search by user, title, message..." class="border px-3 py-2 rounded w-full md:w-64" />
       <select id="notif-type-filter" class="border px-2 py-2 rounded">
         <option value="">All Types</option>
         <option value="info">Info</option>
@@ -33,41 +34,63 @@ function NotificationTable(notifications, users) {
       <button id="notif-export-csv" class="ml-auto bg-blue-600 text-white px-3 py-2 rounded">Export CSV</button>
       <button id="notif-send" class="bg-green-600 text-white px-3 py-2 rounded">Send Notification</button>
     </div>
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-xs">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>User</th>
-            <th>Title</th>
-            <th>Message</th>
-            <th>Type</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="notif-table-body">
-          ${notifications.map(n => {
-            const user = users.find(u => u.id === n.user_id);
-            return `
-              <tr>
-                <td>${formatDate(n.created_at)}</td>
-                <td>
-                  <span class="font-semibold">${user?.full_name || "Unknown"}</span>
-                  <div class="text-xs text-gray-400">${user?.email || ""}</div>
-                </td>
-                <td>${n.title || "-"}</td>
-                <td>${n.message.length > 60 ? n.message.slice(0, 60) + "..." : n.message}</td>
-                <td>${typeBadge(n.type)}</td>
-                <td>${n.read ? `<span class="text-green-600">Read</span>` : `<span class="text-yellow-600">Unread</span>`}</td>
-                <td>
-                  <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded notif-view" data-id="${n.id}">View</button>
-                </td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
+    <div>
+      <div class="block md:hidden">
+        ${notifications.map(n => {
+          const user = users.find(u => u.id === n.user_id);
+          return `
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow p-4 mb-4 animate-fade-in">
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                ${typeBadge(n.type)}
+              </div>
+              <div class="text-xs text-gray-400 mb-1">${user?.email || ""}</div>
+              <div class="mb-1"><b>Title:</b> ${n.title || "-"}</div>
+              <div class="mb-1"><b>Message:</b> ${n.message.length > 60 ? n.message.slice(0, 60) + "..." : n.message}</div>
+              <div class="mb-1"><b>Status:</b> ${n.read ? `<span class="text-green-600">Read</span>` : `<span class="text-yellow-600">Unread</span>`}</div>
+              <div class="flex flex-wrap gap-2 mt-2">
+                <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded notif-view" data-id="${n.id}">View</button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+      <div class="hidden md:block overflow-x-auto">
+        <table class="min-w-full text-xs">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>User</th>
+              <th>Title</th>
+              <th>Message</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="notif-table-body">
+            ${notifications.map(n => {
+              const user = users.find(u => u.id === n.user_id);
+              return `
+                <tr>
+                  <td>${formatDate(n.created_at)}</td>
+                  <td>
+                    <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                    <div class="text-xs text-gray-400">${user?.email || ""}</div>
+                  </td>
+                  <td>${n.title || "-"}</td>
+                  <td>${n.message.length > 60 ? n.message.slice(0, 60) + "..." : n.message}</td>
+                  <td>${typeBadge(n.type)}</td>
+                  <td>${n.read ? `<span class="text-green-600">Read</span>` : `<span class="text-yellow-600">Unread</span>`}</td>
+                  <td>
+                    <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded notif-view" data-id="${n.id}">View</button>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
 }
@@ -165,10 +188,10 @@ const notifications = async () => {
     document.getElementById("app").innerHTML = `
       ${AdminNavbar({ activeItem, isCollapsed, isDark })}
       <div class="lg:ml-64 min-h-screen bg-gray-50 dark:bg-slate-800 transition-colors">
-        <div class="p-6 lg:p-8">
+        <div class="p-4 md:p-8">
           <div class="max-w-7xl mx-auto">
             <h1 class="text-2xl font-bold mb-6">Notifications</h1>
-            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-4 md:p-6">
               ${NotificationTable(filteredNotes, users)}
             </div>
           </div>
@@ -225,25 +248,47 @@ const notifications = async () => {
         if (type && n.type !== type) match = false;
         return match;
       });
-      tableBody.innerHTML = filteredNotes.map(n => {
-        const user = users.find(u => u.id === n.user_id);
-        return `
-          <tr>
-            <td>${formatDate(n.created_at)}</td>
-            <td>
-              <span class="font-semibold">${user?.full_name || "Unknown"}</span>
-              <div class="text-xs text-gray-400">${user?.email || ""}</div>
-            </td>
-            <td>${n.title || "-"}</td>
-            <td>${n.message.length > 60 ? n.message.slice(0, 60) + "..." : n.message}</td>
-            <td>${typeBadge(n.type)}</td>
-            <td>${n.read ? `<span class="text-green-600">Read</span>` : `<span class="text-yellow-600">Unread</span>`}</td>
-            <td>
-              <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded notif-view" data-id="${n.id}">View</button>
-            </td>
-          </tr>
-        `;
-      }).join("");
+      // For mobile, re-render the whole table
+      if (window.innerWidth < 768) {
+        document.querySelector(".block.md\\:hidden").innerHTML = filteredNotes.map(n => {
+          const user = users.find(u => u.id === n.user_id);
+          return `
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow p-4 mb-4 animate-fade-in">
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                ${typeBadge(n.type)}
+              </div>
+              <div class="text-xs text-gray-400 mb-1">${user?.email || ""}</div>
+              <div class="mb-1"><b>Title:</b> ${n.title || "-"}</div>
+              <div class="mb-1"><b>Message:</b> ${n.message.length > 60 ? n.message.slice(0, 60) + "..." : n.message}</div>
+              <div class="mb-1"><b>Status:</b> ${n.read ? `<span class="text-green-600">Read</span>` : `<span class="text-yellow-600">Unread</span>`}</div>
+              <div class="flex flex-wrap gap-2 mt-2">
+                <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded notif-view" data-id="${n.id}">View</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      } else if (tableBody) {
+        tableBody.innerHTML = filteredNotes.map(n => {
+          const user = users.find(u => u.id === n.user_id);
+          return `
+            <tr>
+              <td>${formatDate(n.created_at)}</td>
+              <td>
+                <span class="font-semibold">${user?.full_name || "Unknown"}</span>
+                <div class="text-xs text-gray-400">${user?.email || ""}</div>
+              </td>
+              <td>${n.title || "-"}</td>
+              <td>${n.message.length > 60 ? n.message.slice(0, 60) + "..." : n.message}</td>
+              <td>${typeBadge(n.type)}</td>
+              <td>${n.read ? `<span class="text-green-600">Read</span>` : `<span class="text-yellow-600">Unread</span>`}</td>
+              <td>
+                <button class="btn btn-xs bg-blue-600 text-white px-2 py-1 rounded notif-view" data-id="${n.id}">View</button>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
       attachRowEvents();
     }
     [searchInput, typeFilter].forEach(el => {
