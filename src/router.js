@@ -254,7 +254,19 @@ window.addEventListener("popstate", async (e) => {
 
 // Initial page load
 window.addEventListener("DOMContentLoaded", async () => {
+  // Ensure #app exists before rendering
+  if (!window.app) {
+    const appDiv = document.createElement("div");
+    appDiv.id = "app";
+    document.body.prepend(appDiv);
+    window.app = appDiv;
+  }
   const { page, args } = parsePathToRoute(window.location.pathname);
-  await loadPage(page, ...(args || []));
+  // Always render login page for /login or /user/login
+  if (page === "notfound" && (window.location.pathname === "/login" || window.location.pathname === "/user/login")) {
+    await loadPage("login");
+  } else {
+    await loadPage(page, ...(args || []));
+  }
   document.body.appendChild(renderFlagLanguageToggle());
 });

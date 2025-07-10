@@ -20,6 +20,7 @@ export async function loginAndSendOtp(accessID, password) {
   userData = res.data;
   userError = res.error;
 
+
   // 2. If not found, try by account number
   if ((!userData || userError) && accessID) {
     // Find account by account_number
@@ -42,6 +43,8 @@ export async function loginAndSendOtp(accessID, password) {
   }
 
   if (userError || !userData) throw new Error("Invalid credentials.");
+
+  if (!userData || !userData.email) throw new Error("Invalid credentials.");
 
   // Authenticate with Supabase Auth using email
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
