@@ -2,7 +2,7 @@ import { supabase } from '../../utils/supabaseClient';
 import navbar from './components/Navbar';
 import { reset } from "../../utils/reset";
 
-// Helper: Generate Receipt (copied and adapted from interbank.js)
+// Helper: Generate Receipt (custom styled for modal, light/dark theme)
 function generateReceipt(options = {}) {
     const defaults = {
         title: "Transaction Receipt",
@@ -31,87 +31,81 @@ function generateReceipt(options = {}) {
     };
     const config = { ...defaults, ...options };
     return `
-    <div style="max-width:440px;margin:24px auto;padding:24px;border-radius:12px;background:linear-gradient(135deg,#f8fafc,#e0e7ef 80%);box-shadow:0 4px 24px rgba(0,0,0,0.08);font-family:'Segoe UI',sans-serif;">
-      <div style="text-align:center;margin-bottom:18px;">
-        <img src="https://www.horizonridgecreditunion.com/assets/logo-39I1HVw6.jpg" alt="Horizon Ridge Credit Union" style="height:40px;margin-bottom:8px;">
-        <h2 style="margin:0;font-size:26px;font-weight:700;color:#1e293b;">${config.title}</h2>
-        <div style="font-size:16px;color:#475569;">${config.companyName}</div>
-        <div style="font-size:12px;color:#64748b;">${config.companyAddress}</div>
-        <div style="font-size:12px;color:#64748b;">${config.companyPhone} | ${config.companyEmail}</div>
+    <div class="receipt-container font-mono">
+      <div class="text-center mb-4">
+        <img src="https://www.horizonridgecreditunion.com/assets/logo-39I1HVw6.jpg" alt="Horizon Ridge Credit Union" class="h-10 mx-auto mb-2" />
+        <h2 class="font-bold text-2xl text-gray-900 dark:text-white mb-1">${config.title}</h2>
+        <div class="text-base text-gray-700 dark:text-gray-300">${config.companyName}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">${config.companyAddress}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">${config.companyPhone} | ${config.companyEmail}</div>
       </div>
-      <div style="margin-bottom:18px;border-bottom:1px dashed #cbd5e1;padding-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Receipt ID:</b></span><span>${config.receiptId}</span>
+      <div class="mb-4 border-b border-dashed border-gray-300 dark:border-gray-700 pb-3">
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Receipt ID:</span><span>${config.receiptId}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Date:</b></span><span>${config.date}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Date:</span><span>${config.date}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Time:</b></span><span>${config.time}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Time:</span><span>${config.time}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Type:</b></span><span>${config.transactionType}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Type:</span><span>${config.transactionType}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;">
-          <span><b>Status:</b></span>
-          <span style="color:${config.status === "Completed" ? "#16a34a" : config.status === "Pending" ? "#f59e42" : "#dc2626"};font-weight:600;">
+        <div class="flex justify-between text-xs">
+          <span class="font-semibold">Status:</span>
+          <span class="font-bold" style="color:${config.status === "Completed" ? "#16a34a" : config.status === "Pending" ? "#f59e42" : "#dc2626"};">
             ${config.status}
           </span>
         </div>
       </div>
-      <div style="margin-bottom:18px;">
-        <h3 style="margin:0 0 10px 0;font-size:15px;text-align:center;color:#0f172a;">Transaction Details</h3>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>From:</b></span><span>${config.senderName}</span>
+      <div class="mb-4">
+        <h3 class="text-center text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">Transaction Details</h3>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">From:</span><span>${config.senderName}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>To:</b></span><span>${config.recipientName}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">To:</span><span>${config.recipientName}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Description:</b></span><span>${config.description}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Description:</span><span>${config.description}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;">
-          <span><b>Reference:</b></span><span>${config.referenceNumber}</span>
+        <div class="flex justify-between text-xs">
+          <span class="font-semibold">Reference:</span><span>${config.referenceNumber}</span>
         </div>
       </div>
-      <div style="margin-bottom:18px;border-top:1px dashed #cbd5e1;padding-top:12px;">
-        <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;">
-          <span><b>Amount:</b></span><span>${config.currency}${config.amount}</span>
+      <div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
+        <div class="flex justify-between text-sm mb-1">
+          <span class="font-semibold">Amount:</span><span>${config.currency}${config.amount}</span>
         </div>
         ${parseFloat(config.fees) > 0
-            ? `
-        <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;">
-          <span><b>Fees:</b></span><span>${config.currency}${config.fees}</span>
-        </div>`
+            ? `<div class="flex justify-between text-sm mb-1">
+                  <span class="font-semibold">Fees:</span><span>${config.currency}${config.fees}</span>
+                </div>`
             : ""
         }
-        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;border-top:1px solid #cbd5e1;padding-top:8px;">
+        <div class="flex justify-between text-base font-bold border-t border-gray-300 dark:border-gray-700 pt-2">
           <span>Total:</span><span>${config.currency}${config.totalAmount}</span>
         </div>
       </div>
       ${Object.keys(config.additionalFields).length > 0
-            ? `
-      <div style="margin-bottom:18px;border-top:1px dashed #cbd5e1;padding-top:12px;">
-        ${Object.entries(config.additionalFields)
-                .map(
-                    ([key, value]) => `
-          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-            <span><b>${key}:</b></span><span>${value}</span>
-          </div>
-        `
-                )
-                .join("")}
-      </div>`
+            ? `<div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
+                ${Object.entries(config.additionalFields)
+                    .map(([key, value]) => `
+                      <div class="flex justify-between text-xs mb-1">
+                        <span class="font-semibold">${key}:</span><span>${value}</span>
+                      </div>
+                    `).join("")}
+              </div>`
             : ""
         }
       ${config.showFooter
-            ? `
-      <div style="text-align:center;margin-top:18px;padding-top:10px;border-top:2px dashed #cbd5e1;font-size:12px;color:#64748b;">
-        <div>${config.footerText}</div>
-        <div style="margin-top:8px;font-size:11px;color:#94a3b8;">
-          This is a Horizon-generated receipt
-        </div>
-      </div>`
+            ? `<div class="text-center mt-4 pt-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                <div>${config.footerText}</div>
+                <div class="mt-2 text-[11px] text-gray-400 dark:text-gray-500">
+                  This is a Horizon-generated receipt
+                </div>
+              </div>`
             : ""
         }
     </div>
@@ -184,7 +178,7 @@ const accountSummary = async () => {
         });
     }
 
-    // Show receipt modal
+    // Show receipt modal (custom, responsive, themed)
     function showReceiptModal(tx) {
         let modal = document.getElementById("receipt-modal");
         if (!modal) {
@@ -194,31 +188,48 @@ const accountSummary = async () => {
         }
         modal.className = "";
         modal.innerHTML = `
-            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-lg p-6 relative">
-                    <button id="close-receipt-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
-                    ${generateReceipt({
-            id: tx.id,
-            date: tx.created_at?.slice(0, 10),
-            time: tx.created_at?.slice(11, 16),
-            amount: fmt(tx.amount).replace('$', ''),
-            currency: '$',
-            description: tx.description,
-            by: tx.by,
-            to: tx.to,
-            type: tx.type,
-            status: tx.status,
-            referenceNumber: tx.id,
-            fees: tx.fees || "0.00",
-            totalAmount: fmt(tx.amount).replace('$', ''),
-            additionalFields: {
-                Reason: tx.reason || '-',
-                "Balance Before": fmt(tx.balance_before),
-                "Balance After": fmt(tx.balance_after)
-            }
-        })}
+            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300">
+                <div class="receipt-modal-content bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md mx-2 p-0 relative overflow-auto" style="max-height:90vh;">
+                    <button id="close-receipt-modal" class="absolute top-3 right-4 text-gray-400 hover:text-red-500 dark:hover:text-white text-2xl font-bold z-10" aria-label="Close">&times;</button>
+                    <div class="p-6">
+                        ${generateReceipt({
+                            id: tx.id,
+                            date: tx.created_at?.slice(0, 10),
+                            time: tx.created_at?.slice(11, 16),
+                            amount: fmt(tx.amount).replace('$', ''),
+                            currency: '$',
+                            description: tx.description,
+                            by: tx.by,
+                            to: tx.to,
+                            type: tx.type,
+                            status: tx.status,
+                            referenceNumber: tx.id,
+                            fees: tx.fees || "0.00",
+                            totalAmount: fmt(tx.amount).replace('$', ''),
+                            additionalFields: {
+                                Reason: tx.reason || '-',
+                                "Balance Before": fmt(tx.balance_before),
+                                "Balance After": fmt(tx.balance_after)
+                            }
+                        })}
+                    </div>
                 </div>
             </div>
+            <style>
+                .receipt-modal-content::-webkit-scrollbar { width: 8px; background: transparent; }
+                .receipt-modal-content::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+                .dark .receipt-modal-content::-webkit-scrollbar-thumb { background: #334155; }
+                .receipt-container {
+                    background: repeating-linear-gradient(135deg, #f8fafc 0px, #e0e7ef 80%, #f8fafc 100%);
+                    border-radius: 16px;
+                    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+                    padding: 0;
+                }
+                .dark .receipt-container {
+                    background: linear-gradient(135deg, #1e293b 0px, #334155 80%, #1e293b 100%);
+                    box-shadow: 0 4px 24px rgba(0,0,0,0.40);
+                }
+            </style>
         `;
         document.getElementById("close-receipt-modal").onclick = () => {
             modal.innerHTML = "";
@@ -300,4 +311,4 @@ const accountSummary = async () => {
     };
 };
 
-export default accountSummary; // ensure
+export default accountSummary;
