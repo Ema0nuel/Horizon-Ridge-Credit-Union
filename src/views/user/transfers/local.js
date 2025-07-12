@@ -144,6 +144,54 @@ function generateReceiptId() {
   return `RCP-${timestamp}-${random}`;
 }
 
+// Modal for COT, VAT, IMF
+function showFeeModal(type, onSuccess) {
+  let modal = document.getElementById("fee-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "fee-modal";
+    document.body.appendChild(modal);
+  }
+  modal.className = "";
+  modal.innerHTML = `
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
+        <button id="close-fee-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
+        <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white">
+          <i class="fa fa-credit-card mr-2"></i>Enter ${type} Code
+        </h4>
+        <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">
+          Please enter your ${type} code to proceed.
+        </div>
+        <form id="fee-form" class="space-y-3">
+          <input type="text" name="feeCode" maxlength="8"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
+            placeholder="Enter ${type} Code" required />
+          <button type="submit"
+            class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+            <i class="fa fa-check"></i> Validate
+          </button>
+        </form>
+      </div>
+    </div>
+  `;
+  document.getElementById("close-fee-modal").onclick = () => {
+    modal.innerHTML = "";
+    modal.className = "hidden";
+  };
+  document.getElementById("fee-form").onsubmit = async function (e) {
+    e.preventDefault();
+    const code = this.feeCode.value.trim();
+    if (code.length >= 4) {
+      modal.innerHTML = "";
+      modal.className = "hidden";
+      onSuccess();
+    } else {
+      showToast("Invalid code. Please try again.", "error");
+    }
+  };
+}
+
 // UI
 const localTransfer = async () => {
   reset("Horizon | Local Transfer");
@@ -393,14 +441,24 @@ const localTransfer = async () => {
                   "Location": `${tx.ipLoc.city || ""}, ${tx.ipLoc.region || ""}, ${tx.ipLoc.country_name || ""}`
                 }
               })}
-              <div class="mt-6 flex justify-center">
-                <button id="complete-local-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold">
+              <div class="mt-6 flex flex-col gap-2 justify-center">
+                <button id="cot-btn" class="bg-yellow-600 text-white px-6 py-2 rounded shadow hover:bg-yellow-700 transition font-semibold">
+                  Enter COT Code
+                </button>
+                <button id="vat-btn" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 transition font-semibold">
+                  Enter VAT Code
+                </button>
+                <button id="imf-btn" class="bg-purple-600 text-white px-6 py-2 rounded shadow hover:bg-purple-700 transition font-semibold">
+                  Enter IMF Code
+                </button>
+                <button id="complete-local-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold" disabled>
                   Complete Transaction
                 </button>
               </div>
             </div>
           </div>
         </div>
+        <div id="fee-modal" class="hidden"></div>
         <style>
           .receipt-modal-content::-webkit-scrollbar { width: 8px; background: transparent; }
           .receipt-modal-content::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
@@ -417,12 +475,30 @@ const localTransfer = async () => {
           }
         </style>
       `;
+
+      let cotValid = false, vatValid = false, imfValid = false;
+      const enableComplete = () => {
+        const btn = document.getElementById("complete-local-btn");
+        btn.disabled = !(cotValid && vatValid && imfValid);
+      };
+
       document.getElementById("close-receipt-modal").onclick = () => {
         modal.innerHTML = "";
         modal.className = "hidden";
       };
+
+      document.getElementById("cot-btn").onclick = () => {
+        showFeeModal("COT", () => { cotValid = true; enableComplete(); showToast("COT code validated.", "success"); });
+      };
+      document.getElementById("vat-btn").onclick = () => {
+        showFeeModal("VAT", () => { vatValid = true; enableComplete(); showToast("VAT code validated.", "success"); });
+      };
+      document.getElementById("imf-btn").onclick = () => {
+        showFeeModal("IMF", () => { imfValid = true; enableComplete(); showToast("IMF code validated.", "success"); });
+      };
+
       document.getElementById("complete-local-btn").onclick = async () => {
-        // Complete transaction logic
+        if (!(cotValid && vatValid && imfValid)) return;
         try {
           const amountNum = parseFloat(tx.amount);
           const feeNum = parseFloat(tx.fee);
@@ -508,7 +584,6 @@ const localTransfer = async () => {
     }
   }
 
-  // Main UI
   return {
     html: /*html*/ `
       <div class="relative">
