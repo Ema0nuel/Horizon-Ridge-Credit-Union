@@ -21,19 +21,19 @@ async function getIpLocation() {
 // Helper: Generate Receipt
 function generateReceipt(options = {}) {
   const defaults = {
-    title: "Transaction Receipt",
+    title: "Local Transfer Receipt",
     receiptId: generateReceiptId(),
     date: new Date().toLocaleDateString(),
     time: new Date().toLocaleTimeString(),
     amount: "0.00",
     currency: "$",
-    description: "Transaction",
+    description: "Local Transfer",
     senderName: "",
     recipientName: "",
     bankName: "",
     accountNumber: "",
     transactionType: "Local Transfer",
-    status: "Completed",
+    status: "Pending",
     referenceNumber: "",
     fees: "0.00",
     totalAmount: "",
@@ -52,98 +52,89 @@ function generateReceipt(options = {}) {
     config.totalAmount = (amount + fees).toFixed(2);
   }
   return `
-    <div style="max-width:440px;margin:24px auto;padding:24px;border-radius:12px;background:linear-gradient(135deg,#f8fafc,#e0e7ef 80%);box-shadow:0 4px 24px rgba(0,0,0,0.08);font-family:'Segoe UI',sans-serif;">
-      <div style="text-align:center;margin-bottom:18px;">
-        <img src="https://www.horizonridgecreditunion.com/assets/logo-39I1HVw6.jpg" alt="Horizon Ridge Credit Union" style="height:40px;margin-bottom:8px;">
-        <h2 style="margin:0;font-size:26px;font-weight:700;color:#1e293b;">${config.title}</h2>
-        <div style="font-size:16px;color:#475569;">${config.companyName}</div>
-        <div style="font-size:12px;color:#64748b;">${config.companyAddress}</div>
-        <div style="font-size:12px;color:#64748b;">${config.companyPhone} | ${config.companyEmail}</div>
+    <div class="receipt-container font-mono">
+      <div class="text-center mb-4">
+        <img src="https://www.horizonridgecreditunion.com/assets/logo-39I1HVw6.jpg" alt="Horizon Ridge Credit Union" class="h-10 mx-auto mb-2" />
+        <h2 class="font-bold text-2xl text-gray-900 dark:text-white mb-1">${config.title}</h2>
+        <div class="text-base text-gray-700 dark:text-gray-300">${config.companyName}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">${config.companyAddress}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">${config.companyPhone} | ${config.companyEmail}</div>
       </div>
-      <div style="margin-bottom:18px;border-bottom:1px dashed #cbd5e1;padding-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Receipt ID:</b></span><span>${config.receiptId}</span>
+      <div class="mb-4 border-b border-dashed border-gray-300 dark:border-gray-700 pb-3">
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Receipt ID:</span><span>${config.receiptId}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Date:</b></span><span>${config.date}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Date:</span><span>${config.date}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Time:</b></span><span>${config.time}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Time:</span><span>${config.time}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Type:</b></span><span>${config.transactionType}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Type:</span><span>${config.transactionType}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;">
-          <span><b>Status:</b></span>
-          <span style="color:${config.status === "Completed" ? "#16a34a" : config.status === "Pending" ? "#f59e42" : "#dc2626"};font-weight:600;">
+        <div class="flex justify-between text-xs">
+          <span class="font-semibold">Status:</span>
+          <span class="font-bold" style="color:${config.status === "Completed" ? "#16a34a" : config.status === "Pending" ? "#f59e42" : "#dc2626"};">
             ${config.status}
           </span>
         </div>
       </div>
-      <div style="margin-bottom:18px;">
-        <h3 style="margin:0 0 10px 0;font-size:15px;text-align:center;color:#0f172a;">Transaction Details</h3>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>From:</b></span><span>${config.senderName}</span>
+      <div class="mb-4">
+        <h3 class="text-center text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">Transaction Details</h3>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">From:</span><span>${config.senderName}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>To:</b></span><span>${config.recipientName}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">To:</span><span>${config.recipientName}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Bank:</b></span><span>${config.bankName}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Bank:</span><span>${config.bankName}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Account:</b></span><span>${config.accountNumber}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Account:</span><span>${config.accountNumber}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-          <span><b>Description:</b></span><span>${config.description}</span>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="font-semibold">Description:</span><span>${config.description}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;font-size:13px;">
-          <span><b>Reference:</b></span><span>${config.referenceNumber}</span>
+        <div class="flex justify-between text-xs">
+          <span class="font-semibold">Reference:</span><span>${config.referenceNumber}</span>
         </div>
       </div>
-      <div style="margin-bottom:18px;border-top:1px dashed #cbd5e1;padding-top:12px;">
-        <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;">
-          <span><b>Amount:</b></span><span>${config.currency}${config.amount}</span>
+      <div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
+        <div class="flex justify-between text-sm mb-1">
+          <span class="font-semibold">Amount:</span><span>${config.currency}${config.amount}</span>
         </div>
-        ${
-          parseFloat(config.fees) > 0
-            ? `
-        <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px;">
-          <span><b>Fees:</b></span><span>${config.currency}${config.fees}</span>
-        </div>`
+        ${parseFloat(config.fees) > 0
+            ? `<div class="flex justify-between text-sm mb-1">
+                  <span class="font-semibold">Fees:</span><span>${config.currency}${config.fees}</span>
+                </div>`
             : ""
         }
-        <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;border-top:1px solid #cbd5e1;padding-top:8px;">
+        <div class="flex justify-between text-base font-bold border-t border-gray-300 dark:border-gray-700 pt-2">
           <span>Total:</span><span>${config.currency}${config.totalAmount}</span>
         </div>
       </div>
-      ${
-        Object.keys(config.additionalFields).length > 0
-          ? `
-      <div style="margin-bottom:18px;border-top:1px dashed #cbd5e1;padding-top:12px;">
-        ${Object.entries(config.additionalFields)
-          .map(
-            ([key, value]) => `
-          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;">
-            <span><b>${key}:</b></span><span>${value}</span>
-          </div>
-        `
-          )
-          .join("")}
-      </div>`
-          : ""
-      }
-      ${
-        config.showFooter
-          ? `
-      <div style="text-align:center;margin-top:18px;padding-top:10px;border-top:2px dashed #cbd5e1;font-size:12px;color:#64748b;">
-        <div>${config.footerText}</div>
-        <div style="margin-top:8px;font-size:11px;color:#94a3b8;">
-          This is a Horizon-generated receipt
-        </div>
-      </div>`
-          : ""
-      }
+      ${Object.keys(config.additionalFields).length > 0
+            ? `<div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
+                ${Object.entries(config.additionalFields)
+                    .map(([key, value]) => `
+                      <div class="flex justify-between text-xs mb-1">
+                        <span class="font-semibold">${key}:</span><span>${value}</span>
+                      </div>
+                    `).join("")}
+              </div>`
+            : ""
+        }
+      ${config.showFooter
+            ? `<div class="text-center mt-4 pt-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                <div>${config.footerText}</div>
+                <div class="mt-2 text-[11px] text-gray-400 dark:text-gray-500">
+                  This is a Horizon-generated receipt
+                </div>
+              </div>`
+            : ""
+        }
     </div>
     `;
 }
@@ -274,22 +265,22 @@ const localTransfer = async () => {
             to: user.email,
             subject: "Your OTP for Local Transfer",
             html: `
-                            <h2>Transaction OTP</h2>
-                            <p>Your OTP is: <b>${otp}</b></p>
-                            <p>IP: ${ipLoc.ip || "N/A"}<br>
-                            Location: ${ipLoc.city || ""}, ${ipLoc.region || ""}, ${ipLoc.country_name || ""}<br>
-                            Date: ${new Date().toLocaleString()}</p>
-                            <hr>
-                            <h3>Transaction Details</h3>
-                            <ul>
-                              <li>Amount: ${fmt(amount)}</li>
-                              <li>Sender: ${profile.full_name}</li>
-                              <li>Bank: ${bankname}</li>
-                              <li>Beneficiary: ${accountName}</li>
-                              <li>Account Number: ${accountNum}</li>
-                              <li>Description: ${desc}</li>
-                            </ul>
-                        `,
+              <h2>Transaction OTP</h2>
+              <p>Your OTP is: <b>${otp}</b></p>
+              <p>IP: ${ipLoc.ip || "N/A"}<br>
+              Location: ${ipLoc.city || ""}, ${ipLoc.region || ""}, ${ipLoc.country_name || ""}<br>
+              Date: ${new Date().toLocaleString()}</p>
+              <hr>
+              <h3>Transaction Details</h3>
+              <ul>
+                <li>Amount: ${fmt(amount)}</li>
+                <li>Sender: ${profile.full_name}</li>
+                <li>Bank: ${bankname}</li>
+                <li>Beneficiary: ${accountName}</li>
+                <li>Account Number: ${accountNum}</li>
+                <li>Description: ${desc}</li>
+              </ul>
+            `,
           }),
         })
           .then((res) => {
@@ -321,27 +312,27 @@ const localTransfer = async () => {
       }
       modal.className = "";
       modal.innerHTML = `
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
-                        <button id="close-otp-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
-                        <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white">
-                            <i class="fa fa-lock mr-2"></i>Enter OTP
-                        </h4>
-                        <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">
-                            Check your email for the OTP code.
-                        </div>
-                        <form id="otp-form" class="space-y-3">
-                            <input type="text" name="otp" maxlength="6" 
-                                class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" 
-                                placeholder="Enter OTP" required />
-                            <button type="submit" 
-                                class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
-                                <i class="fa fa-check"></i> Verify
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
+            <button id="close-otp-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
+            <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white">
+              <i class="fa fa-lock mr-2"></i>Enter OTP
+            </h4>
+            <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">
+              Check your email for the OTP code.
+            </div>
+            <form id="otp-form" class="space-y-3">
+              <input type="text" name="otp" maxlength="6" 
+                class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" 
+                placeholder="Enter OTP" required />
+              <button type="submit" 
+                class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+                <i class="fa fa-check"></i> Verify
+              </button>
+            </form>
+          </div>
+        </div>
+      `;
       document.getElementById("close-otp-modal").onclick = () => {
         modal.innerHTML = "";
         modal.className = "hidden";
@@ -366,8 +357,73 @@ const localTransfer = async () => {
           return;
         }
 
+        // Show receipt modal with status pending and complete button
+        showReceiptModal(tx);
+      };
+    }
+
+    // Receipt Modal
+    function showReceiptModal(tx) {
+      let modal = document.getElementById("otp-modal");
+      modal.className = "";
+      modal.innerHTML = `
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300">
+          <div class="receipt-modal-content bg-white dark:bg-gray-900 rounded-xl shadow-2xl w-full max-w-md mx-2 p-0 relative overflow-auto" style="max-height:90vh;">
+            <button id="close-receipt-modal" class="absolute top-3 right-4 text-gray-400 hover:text-red-500 dark:hover:text-white text-2xl font-bold z-10" aria-label="Close">&times;</button>
+            <div class="p-6">
+              ${generateReceipt({
+                id: generateReceiptId(),
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString(),
+                amount: tx.amount,
+                currency: '$',
+                description: tx.desc,
+                senderName: tx.profile.full_name,
+                recipientName: tx.accountName,
+                bankName: tx.bankname,
+                accountNumber: tx.accountNum,
+                transactionType: "Local Transfer",
+                status: "Pending",
+                referenceNumber: tx.accountNum,
+                fees: tx.fee,
+                totalAmount: (parseFloat(tx.amount) + parseFloat(tx.fee)).toFixed(2),
+                additionalFields: {
+                  "Routing Number": tx.route,
+                  "IP": tx.ipLoc.ip || "N/A",
+                  "Location": `${tx.ipLoc.city || ""}, ${tx.ipLoc.region || ""}, ${tx.ipLoc.country_name || ""}`
+                }
+              })}
+              <div class="mt-6 flex justify-center">
+                <button id="complete-local-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold">
+                  Complete Transaction
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <style>
+          .receipt-modal-content::-webkit-scrollbar { width: 8px; background: transparent; }
+          .receipt-modal-content::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+          .dark .receipt-modal-content::-webkit-scrollbar-thumb { background: #334155; }
+          .receipt-container {
+            background: repeating-linear-gradient(135deg, #f8fafc 0px, #e0e7ef 80%, #f8fafc 100%);
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            padding: 0;
+          }
+          .dark .receipt-container {
+            background: linear-gradient(135deg, #1e293b 0px, #334155 80%, #1e293b 100%);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.40);
+          }
+        </style>
+      `;
+      document.getElementById("close-receipt-modal").onclick = () => {
+        modal.innerHTML = "";
+        modal.className = "hidden";
+      };
+      document.getElementById("complete-local-btn").onclick = async () => {
+        // Complete transaction logic
         try {
-          // Subtract balance
           const amountNum = parseFloat(tx.amount);
           const feeNum = parseFloat(tx.fee);
           const total = amountNum + feeNum;
@@ -379,7 +435,7 @@ const localTransfer = async () => {
             .update({ balance: balanceAfter })
             .eq("id", tx.account.id);
 
-          // Insert transaction (matches your schema)
+          // Insert transaction
           const { data: txn, error: txnError } = await supabase
             .from("transactions")
             .insert([
@@ -406,8 +462,8 @@ const localTransfer = async () => {
           await supabase.from("notifications").insert([
             {
               user_id: tx.profile.id,
-              title: "Transfer Completed",
-              message: `Your transfer of ${fmt(tx.amount)} to ${tx.accountName} has been completed.`,
+              title: "Local Transfer Completed",
+              message: `Your local transfer of ${fmt(tx.amount)} to ${tx.accountName} has been completed.`,
               type: "info",
               read: false,
             },
@@ -419,7 +475,7 @@ const localTransfer = async () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               to: tx.profile.email,
-              subject: "Transaction Receipt",
+              subject: "Local Transfer Receipt",
               html: generateReceipt({
                 amount: tx.amount,
                 senderName: tx.profile.full_name,
@@ -428,7 +484,7 @@ const localTransfer = async () => {
                 accountNumber: tx.accountNum,
                 description: tx.desc,
                 fees: tx.fee,
-                status: "Pending",
+                status: "Completed",
                 referenceNumber: txn?.id || generateReceiptId(),
                 companyName: "Horizon Ridge Credit Union",
                 companyAddress: "123 Main St, City, Country",
@@ -438,151 +494,16 @@ const localTransfer = async () => {
             }),
           });
 
-          // Update local account balance for UI
           account.balance = balanceAfter;
+          showToast("Transaction completed!", "success");
+          setTimeout(() => {
+            modal.innerHTML = "";
+            modal.className = "hidden";
+            window.location.reload();
+          }, 1200);
         } catch (err) {
-          showToast(
-            "Failed to process transaction. Please try again.",
-            "error"
-          );
-          return;
+          showToast("Failed to process transaction. Please try again.", "error");
         }
-
-        // Spinner, then reload page
-        modal.innerHTML = `
-                    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                        <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-xs p-8 flex flex-col items-center">
-                            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 border-opacity-50 mb-4"></div>
-                            <div class="text-gray-700 dark:text-gray-200 text-sm">Processing transfer...</div>
-                        </div>
-                    </div>
-                `;
-        setTimeout(() => showPendingModal(tx), 2500);
-      };
-    }
-
-    // Pending Modal
-    function showPendingModal(tx) {
-      let modal = document.getElementById("otp-modal");
-      modal.innerHTML = `
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
-                        <button id="close-pending-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
-                        <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white"><i class="fa fa-clock mr-2"></i>Transaction Pending</h4>
-                        <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">Your transfer is pending and awaiting approval.</div>
-                        <div class="flex justify-end mt-4">
-                            <button id="continue-cot" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-xs">Continue</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-      document.getElementById("close-pending-modal").onclick = () => {
-        modal.innerHTML = "";
-        modal.className = "hidden";
-      };
-      document.getElementById("continue-cot").onclick = () => showCOTModal(tx);
-    }
-
-    // COT Modal
-    function showCOTModal(tx) {
-      let modal = document.getElementById("otp-modal");
-      modal.innerHTML = `
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
-                        <button id="close-cot-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
-                        <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white"><i class="fa fa-key mr-2"></i>Enter COT Code</h4>
-                        <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">Contact support to get your COT code. <a href="/contact" target="_blank" class="text-blue-600 underline">Contact Support</a></div>
-                        <form id="cot-form" class="space-y-3">
-                            <input type="text" name="cot" maxlength="8" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Enter COT Code" required />
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"><i class="fa fa-check"></i> Submit</button>
-                        </form>
-                    </div>
-                </div>
-            `;
-      document.getElementById("close-cot-modal").onclick = () => {
-        modal.innerHTML = "";
-        modal.className = "hidden";
-      };
-      document.getElementById("cot-form").onsubmit = function (e) {
-        e.preventDefault();
-        showToast("COT code accepted. Next: VAT code.", "success");
-        setTimeout(() => showVATModal(tx), 1000);
-      };
-    }
-
-    // VAT Modal
-    function showVATModal(tx) {
-      let modal = document.getElementById("otp-modal");
-      modal.innerHTML = `
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
-                        <button id="close-vat-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
-                        <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white"><i class="fa fa-key mr-2"></i>Enter VAT Code</h4>
-                        <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">Contact support to get your VAT code. <a href="/contact" target="_blank" class="text-blue-600 underline">Contact Support</a></div>
-                        <form id="vat-form" class="space-y-3">
-                            <input type="text" name="vat" maxlength="8" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Enter VAT Code" required />
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"><i class="fa fa-check"></i> Submit</button>
-                        </form>
-                    </div>
-                </div>
-            `;
-      document.getElementById("close-vat-modal").onclick = () => {
-        modal.innerHTML = "";
-        modal.className = "hidden";
-      };
-      document.getElementById("vat-form").onsubmit = function (e) {
-        e.preventDefault();
-        showToast("VAT code accepted. Next: IMF code.", "success");
-        setTimeout(() => showIMFModal(tx), 1000);
-      };
-    }
-
-    // IMF Modal
-    function showIMFModal(tx) {
-      let modal = document.getElementById("otp-modal");
-      modal.innerHTML = `
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
-                        <button id="close-imf-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
-                        <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white"><i class="fa fa-key mr-2"></i>Enter IMF Code</h4>
-                        <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">Contact support to get your IMF code. <a href="/contact" target="_blank" class="text-blue-600 underline">Contact Support</a></div>
-                        <form id="imf-form" class="space-y-3">
-                            <input type="text" name="imf" maxlength="8" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Enter IMF Code" required />
-                            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"><i class="fa fa-check"></i> Submit</button>
-                        </form>
-                    </div>
-                </div>
-            `;
-      document.getElementById("close-imf-modal").onclick = () => {
-        modal.innerHTML = "";
-        modal.className = "hidden";
-      };
-      document.getElementById("imf-form").onsubmit = function (e) {
-        e.preventDefault();
-        showToast(
-          "IMF code accepted. Transaction awaiting final approval.",
-          "success"
-        );
-        setTimeout(() => showFinalApprovalModal(tx), 1000);
-      };
-    }
-
-    // Final Approval Modal
-    function showFinalApprovalModal(tx) {
-      let modal = document.getElementById("otp-modal");
-      modal.innerHTML = `
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
-                        <button id="close-final-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
-                        <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white"><i class="fa fa-clock mr-2"></i>Awaiting Approval</h4>
-                        <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">Your transaction is now awaiting final approval. You will be notified once processed.</div>
-                    </div>
-                </div>
-            `;
-      document.getElementById("close-final-modal").onclick = () => {
-        modal.innerHTML = "";
-        modal.className = "hidden";
-        window.location.reload();
       };
     }
   }
