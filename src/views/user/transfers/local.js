@@ -3,6 +3,23 @@ import navbar from "../components/Navbar";
 import { showToast } from "../../../components/toast";
 import { reset } from "../../../utils/reset";
 
+const complexCodes = [
+  "E9876567", "G0876578", "8767898H", "K2387651", "456L7890", "1M234567", "987654N3", "O2345678", "98765P43", "Q1987654",
+  "R7654321", "567S1234", "T3456789", "876543U1", "V1234567", "345678W9", "X2345678", "9Y876543", "Z3456781", "234567A8",
+  "B3456781", "123456C7", "D2345678", "876E5432", "5678F123", "6789G123", "7890H234", "8901I345", "9012J456", "0123K567",
+  "K4561237", "L5672348", "M6783459", "N7894560", "O8905671", "P9016782", "Q0127893", "R1238904", "S2349015", "T3450126",
+  "U4561237", "V5672348", "W6783459", "X7894560", "Y8905671", "Z9016782", "A0127893", "B1238904", "C2349015", "D3450126",
+  "E4561237", "F5672348", "G6783459", "H7894560", "I8905671", "J9016782", "K0127893", "L1238904", "M2349015", "N3450126",
+  "O4561237", "P5672348", "Q6783459", "R7894560", "S8905671", "T9016782", "U0127893", "V1238904", "W2349015", "X3450126",
+  "Y4561237", "Z5672348", "A6783459", "B7894560", "C8905671", "D9016782", "E0127893", "F1238904", "G2349015", "H3450126",
+  "I4561237", "J5672348", "K6783459", "L7894560", "M8905671", "N9016782", "O0127893", "P1238904", "Q2349015", "R3450126",
+  "S4561237", "T5672348", "U6783459", "V7894560", "W8905671", "X9016782", "Y0127893", "Z1238904", "A2349015", "B3450126",
+  "C4561237", "D5672348", "E6783459", "F7894560", "G8905671", "H9016782", "I0127893", "J1238904", "K2349015", "L3450126",
+  "M4561237", "N5672348", "O6783459", "P7894560", "Q8905671", "R9016782", "S0127893", "T1238904", "U2349015", "V3450126",
+  "W4561237", "X5672348", "Y6783459", "Z7894560", "A8905671", "B9016782", "C0127893", "D1238904", "E2349015", "F3450126",
+  "G4561237", "H5672348", "I6783459", "J7894560", "K8905671", "L9016782", "M0127893", "N1238904", "O2349015", "P3450126"
+];
+
 // Helper: Generate OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -105,8 +122,7 @@ function generateReceipt(options = {}) {
         <div class="flex justify-between text-sm mb-1">
           <span class="font-semibold">Amount:</span><span>${config.currency}${config.amount}</span>
         </div>
-        ${
-          parseFloat(config.fees) > 0
+        ${parseFloat(config.fees) > 0
             ? `<div class="flex justify-between text-sm mb-1">
                   <span class="font-semibold">Fees:</span><span>${config.currency}${config.fees}</span>
                 </div>`
@@ -116,31 +132,26 @@ function generateReceipt(options = {}) {
           <span>Total:</span><span>${config.currency}${config.totalAmount}</span>
         </div>
       </div>
-      ${
-        Object.keys(config.additionalFields).length > 0
-          ? `<div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
+      ${Object.keys(config.additionalFields).length > 0
+            ? `<div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
                 ${Object.entries(config.additionalFields)
-                  .map(
-                    ([key, value]) => `
+                    .map(([key, value]) => `
                       <div class="flex justify-between text-xs mb-1">
                         <span class="font-semibold">${key}:</span><span>${value}</span>
                       </div>
-                    `
-                  )
-                  .join("")}
+                    `).join("")}
               </div>`
-          : ""
-      }
-      ${
-        config.showFooter
-          ? `<div class="text-center mt-4 pt-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+            : ""
+        }
+      ${config.showFooter
+            ? `<div class="text-center mt-4 pt-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
                 <div>${config.footerText}</div>
                 <div class="mt-2 text-[11px] text-gray-400 dark:text-gray-500">
                   This is a Horizon-generated receipt
                 </div>
               </div>`
-          : ""
-      }
+            : ""
+        }
     </div>
     `;
 }
@@ -189,12 +200,12 @@ function showCodeModal(type, onSuccess) {
   document.getElementById("code-form").onsubmit = async function (e) {
     e.preventDefault();
     const code = this.code.value.trim();
-    if (code.length >= 4) {
+    if (complexCodes.includes(code)) {
       modal.innerHTML = "";
       modal.className = "hidden";
       onSuccess();
     } else {
-      showToast("Invalid code. Please try again.", "error");
+      showToast("Invalid code. Please contact support.", "error");
     }
   };
 }
