@@ -144,27 +144,28 @@ function generateReceiptId() {
   return `RCP-${timestamp}-${random}`;
 }
 
-// Modal for COT, VAT, IMF
-function showFeeModal(type, onSuccess) {
-  let modal = document.getElementById("fee-modal");
+// Modal for IMF, COT, VAT
+function showCodeModal(type, onSuccess) {
+  let modal = document.getElementById("code-modal");
   if (!modal) {
     modal = document.createElement("div");
-    modal.id = "fee-modal";
+    modal.id = "code-modal";
     document.body.appendChild(modal);
   }
   modal.className = "";
   modal.innerHTML = `
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
-        <button id="close-fee-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
+        <button id="close-code-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
         <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white">
-          <i class="fa fa-credit-card mr-2"></i>Enter ${type} Code
+          <i class="fa fa-key mr-2"></i>Enter ${type} Code
         </h4>
         <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">
-          Please enter your ${type} code to proceed.
+          Please enter your ${type} code to proceed.<br>
+          <span class="text-red-500">Contact <a href="/contact" target="_blank" class="underline">Support</a> to get your code or chat with admin live.</span>
         </div>
-        <form id="fee-form" class="space-y-3">
-          <input type="text" name="feeCode" maxlength="8"
+        <form id="code-form" class="space-y-3">
+          <input type="text" name="code" maxlength="12"
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
             placeholder="Enter ${type} Code" required />
           <button type="submit"
@@ -175,14 +176,13 @@ function showFeeModal(type, onSuccess) {
       </div>
     </div>
   `;
-  document.getElementById("close-fee-modal").onclick = () => {
+  document.getElementById("close-code-modal").onclick = () => {
     modal.innerHTML = "";
     modal.className = "hidden";
   };
-  document.getElementById("fee-form").onsubmit = async function (e) {
+  document.getElementById("code-form").onsubmit = async function (e) {
     e.preventDefault();
-    const code = this.feeCode.value.trim();
-    // Simulate validation (replace with real validation if needed)
+    const code = this.code.value.trim();
     if (code.length >= 4) {
       modal.innerHTML = "";
       modal.className = "hidden";
@@ -193,9 +193,64 @@ function showFeeModal(type, onSuccess) {
   };
 }
 
+// Success Animation Modal
+function showSuccessModal() {
+  let modal = document.getElementById("success-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "success-modal";
+    document.body.appendChild(modal);
+  }
+  modal.className = "";
+  modal.innerHTML = `
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-2xl w-full max-w-xs p-8 flex flex-col items-center relative">
+        <canvas id="success-canvas" width="120" height="120" style="display:block;margin-bottom:16px;"></canvas>
+        <h3 class="text-lg font-bold text-green-700 dark:text-green-400 mb-2">Transfer Successful!</h3>
+        <p class="text-sm text-gray-700 dark:text-gray-300 mb-2 text-center">Your transfer was made and is <b>awaiting Admin approval</b>.</p>
+        <button id="close-success-modal" class="mt-4 px-5 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition">Close</button>
+      </div>
+    </div>
+    <style>
+      #success-canvas { background: transparent; }
+    </style>
+  `;
+  // Draw animated check
+  const canvas = document.getElementById("success-canvas");
+  const ctx = canvas.getContext("2d");
+  let progress = 0;
+  function drawCheck() {
+    ctx.clearRect(0, 0, 120, 120);
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#16a34a";
+    ctx.beginPath();
+    ctx.arc(60, 60, 48, Math.PI * 0.5, Math.PI * (2 * progress), false);
+    ctx.stroke();
+    if (progress < 1) {
+      progress += 0.03;
+      requestAnimationFrame(drawCheck);
+    } else {
+      // Draw check mark
+      ctx.beginPath();
+      ctx.moveTo(40, 65);
+      ctx.lineTo(55, 80);
+      ctx.lineTo(85, 45);
+      ctx.strokeStyle = "#16a34a";
+      ctx.lineWidth = 8;
+      ctx.stroke();
+    }
+  }
+  drawCheck();
+  document.getElementById("close-success-modal").onclick = () => {
+    modal.innerHTML = "";
+    modal.className = "hidden";
+    window.location.reload();
+  };
+}
+
 // UI
 const wireTransfer = async () => {
-  reset("Horizon | International Funds Transfer");
+  reset("Horizon | Wire Transfer");
   const nav = navbar();
 
   // Fetch session, profile, account
@@ -234,7 +289,7 @@ const wireTransfer = async () => {
     const feeInput = document.getElementById("fee");
     amountInput.addEventListener("input", () => {
       const val = parseFloat(amountInput.value) || 0;
-      let fee = Math.max(10, Math.min(100, val * 0.025)); // 2.5% fee, min $10, max $100
+      let fee = Math.max(1, Math.min(75, val * 0.02));
       feeInput.value = fee.toFixed(2);
     });
 
@@ -248,7 +303,7 @@ const wireTransfer = async () => {
         const bankname = this.bankname.value.trim();
         const accountName = this.accountName.value.trim();
         const amount = parseFloat(this.amount.value);
-        const route = this.route.value.trim();
+        const swift = this.swift.value.trim();
         const fee = parseFloat(this.fee.value);
         const accountNum = this.accountNum.value.trim();
         const desc = this.desc.value.trim();
@@ -257,7 +312,7 @@ const wireTransfer = async () => {
           !bankname ||
           !accountName ||
           !amount ||
-          !route ||
+          !swift ||
           !accountNum ||
           !desc
         ) {
@@ -297,7 +352,7 @@ const wireTransfer = async () => {
           fee,
           bankname,
           accountName,
-          route,
+          swift,
           accountNum,
           desc,
           profile,
@@ -312,9 +367,9 @@ const wireTransfer = async () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             to: user.email,
-            subject: "Your OTP for International Funds Transfer",
+            subject: "Your OTP for Wire Transfer",
             html: `
-              <h2>Wire Transfer OTP</h2>
+              <h2>Transaction OTP</h2>
               <p>Your OTP is: <b>${otp}</b></p>
               <p>IP: ${ipLoc.ip || "N/A"}<br>
               Location: ${ipLoc.city || ""}, ${ipLoc.region || ""}, ${ipLoc.country_name || ""}<br>
@@ -425,7 +480,7 @@ const wireTransfer = async () => {
         date: new Date().toLocaleDateString(),
         time: new Date().toLocaleTimeString(),
         amount: tx.amount,
-        currency: '$',
+        currency: "$",
         description: tx.desc,
         senderName: tx.profile.full_name,
         recipientName: tx.accountName,
@@ -435,31 +490,24 @@ const wireTransfer = async () => {
         status: "Pending",
         referenceNumber: tx.accountNum,
         fees: tx.fee,
-        totalAmount: (parseFloat(tx.amount) + parseFloat(tx.fee)).toFixed(2),
+        totalAmount: (
+          parseFloat(tx.amount) + parseFloat(tx.fee)
+        ).toFixed(2),
         additionalFields: {
-          "Routing Number": tx.route,
-          "IP": tx.ipLoc.ip || "N/A",
-          "Location": `${tx.ipLoc.city || ""}, ${tx.ipLoc.region || ""}, ${tx.ipLoc.country_name || ""}`
-        }
+          "SWIFT Code": tx.swift,
+          IP: tx.ipLoc.ip || "N/A",
+          Location: `${tx.ipLoc.city || ""}, ${tx.ipLoc.region || ""}, ${tx.ipLoc.country_name || ""}`,
+        },
       })}
               <div class="mt-6 flex flex-col gap-2 justify-center">
-                <button id="cot-btn" class="bg-yellow-600 text-white px-6 py-2 rounded shadow hover:bg-yellow-700 transition font-semibold">
-                  Enter COT Code
-                </button>
-                <button id="vat-btn" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 transition font-semibold">
-                  Enter VAT Code
-                </button>
-                <button id="imf-btn" class="bg-purple-600 text-white px-6 py-2 rounded shadow hover:bg-purple-700 transition font-semibold">
-                  Enter IMF Code
-                </button>
-                <button id="complete-wire-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold" disabled>
+                <button id="complete-wire-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold">
                   Complete Transaction
                 </button>
               </div>
             </div>
           </div>
         </div>
-        <div id="fee-modal" class="hidden"></div>
+        <div id="code-modal" class="hidden"></div>
         <style>
           .receipt-modal-content::-webkit-scrollbar { width: 8px; background: transparent; }
           .receipt-modal-content::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
@@ -477,113 +525,93 @@ const wireTransfer = async () => {
         </style>
       `;
 
-      let cotValid = false, vatValid = false, imfValid = false;
-      const enableComplete = () => {
-        const btn = document.getElementById("complete-wire-btn");
-        btn.disabled = !(cotValid && vatValid && imfValid);
-      };
-
       document.getElementById("close-receipt-modal").onclick = () => {
         modal.innerHTML = "";
         modal.className = "hidden";
       };
 
-      document.getElementById("cot-btn").onclick = () => {
-        showFeeModal("COT", () => { cotValid = true; enableComplete(); showToast("COT code validated.", "success"); });
-      };
-      document.getElementById("vat-btn").onclick = () => {
-        showFeeModal("VAT", () => { vatValid = true; enableComplete(); showToast("VAT code validated.", "success"); });
-      };
-      document.getElementById("imf-btn").onclick = () => {
-        showFeeModal("IMF", () => { imfValid = true; enableComplete(); showToast("IMF code validated.", "success"); });
-      };
+      document.getElementById("complete-wire-btn").onclick = () => {
+        showCodeModal("IMF", () => {
+          showCodeModal("COT", () => {
+            showCodeModal("VAT", async () => {
+              // Success animation
+              showSuccessModal();
+              // Save transaction
+              try {
+                const amountNum = parseFloat(tx.amount);
+                const feeNum = parseFloat(tx.fee);
+                const total = amountNum + feeNum;
+                const balanceBefore = parseFloat(tx.account.balance);
+                const balanceAfter = balanceBefore - total;
 
-      document.getElementById("complete-wire-btn").onclick = async () => {
-        if (!(cotValid && vatValid && imfValid)) return;
-        try {
-          const amountNum = parseFloat(tx.amount);
-          const feeNum = parseFloat(tx.fee);
-          const total = amountNum + feeNum;
-          const balanceBefore = parseFloat(tx.account.balance);
-          const balanceAfter = balanceBefore - total;
+                await supabase
+                  .from("accounts")
+                  .update({ balance: balanceAfter })
+                  .eq("id", tx.account.id);
 
-          await supabase
-            .from("accounts")
-            .update({ balance: balanceAfter })
-            .eq("id", tx.account.id);
+                const { data: txn, error: txnError } = await supabase
+                  .from("transactions")
+                  .insert([
+                    {
+                      account_id: tx.account.id,
+                      user_id: tx.profile.id,
+                      type: "wire",
+                      description: tx.desc,
+                      amount: total,
+                      balance_before: balanceBefore,
+                      balance_after: balanceAfter,
+                      status: "pending",
+                    },
+                  ])
+                  .select()
+                  .single();
 
-          // Insert transaction as completed
-          const { data: txn, error: txnError } = await supabase
-            .from("transactions")
-            .insert([
-              {
-                account_id: tx.account.id,
-                user_id: tx.profile.id,
-                type: "wire",
-                description: tx.desc,
-                amount: total,
-                balance_before: balanceBefore,
-                balance_after: balanceAfter,
-                status: "completed",
-              },
-            ])
-            .select()
-            .single();
+                await supabase.from("notifications").insert([
+                  {
+                    user_id: tx.profile.id,
+                    title: "Wire Transfer Initiated",
+                    message: `Your wire transfer of ${fmt(tx.amount)} to ${tx.accountName} is awaiting admin approval.`,
+                    type: "info",
+                    read: false,
+                  },
+                ]);
 
-          if (txnError) {
-            showToast("Transaction failed: " + txnError.message, "error");
-            return;
-          }
-
-          await supabase.from("notifications").insert([
-            {
-              user_id: tx.profile.id,
-              title: "Wire Transfer Completed",
-              message: `Your wire transfer of ${fmt(tx.amount)} to ${tx.accountName} has been completed.`,
-              type: "info",
-              read: false,
-            },
-          ]);
-
-          fetch("/api/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: tx.profile.email,
-              subject: "Wire Transfer Receipt",
-              html: generateReceipt({
-                amount: tx.amount,
-                senderName: tx.profile.full_name,
-                recipientName: tx.accountName,
-                bankName: tx.bankname,
-                accountNumber: tx.accountNum,
-                description: tx.desc,
-                fees: tx.fee,
-                status: "Completed",
-                referenceNumber: txn?.id || generateReceiptId(),
-                companyName: "Horizon Ridge Credit Union",
-                companyAddress: "123 Main St, City, Country",
-                companyPhone: "+1 (555) 123-4567",
-                companyEmail: "horizonridgecreditunion@gmail.com",
-              }),
-            }),
+                fetch("/api/send-email", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    to: tx.profile.email,
+                    subject: "Wire Transfer Receipt",
+                    html: generateReceipt({
+                      amount: tx.amount,
+                      senderName: tx.profile.full_name,
+                      recipientName: tx.accountName,
+                      bankName: tx.bankname,
+                      accountNumber: tx.accountNum,
+                      description: tx.desc,
+                      fees: tx.fee,
+                      status: "Pending",
+                      referenceNumber: txn?.id || generateReceiptId(),
+                      companyName: "Horizon Ridge Credit Union",
+                      companyAddress: "123 Main St, City, Country",
+                      companyPhone: "+1 (555) 123-4567",
+                      companyEmail: "horizonridgecreditunion@gmail.com",
+                    }),
+                  }),
+                });
+              } catch (err) {
+                showToast(
+                  "Failed to process transaction. Please try again.",
+                  "error"
+                );
+              }
+            });
           });
-
-          account.balance = balanceAfter;
-          showToast("Transaction completed!", "success");
-          setTimeout(() => {
-            modal.innerHTML = "";
-            modal.className = "hidden";
-            window.location.reload();
-          }, 1200);
-        } catch (err) {
-          showToast("Failed to process transaction. Please try again.", "error");
-        }
+        });
       };
     }
   }
 
-  // Main UI
   return {
     html: /*html*/ `
       <div class="relative">
@@ -595,7 +623,7 @@ const wireTransfer = async () => {
                 <nav class="flex items-center space-x-2 text-xs">
                   <i class="fa fa-home text-gray-500 text-xs"></i>
                   <span class="text-gray-500">/</span>
-                  <span class="text-gray-700 dark:text-gray-300">International Funds Transfer</span>
+                  <span class="text-gray-700 dark:text-gray-300">Wire Transfer</span>
                 </nav>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -635,8 +663,24 @@ const wireTransfer = async () => {
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="p-6 rounded bg-white dark:bg-gray-800 shadow-sm">
-                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4"><i class="fa fa-street-view mr-2"></i> International Fund Transfer</h3>
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4"><i class="fa fa-globe mr-2"></i> Wire Fund Transfer</h3>
                   <form id="wire-transfer-form" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-xs font-semibold mb-1">Bank Name</label>
+                        <div class="relative">
+                          <input type="text" name="bankname" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Bank Name" required />
+                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-bank"></i></span>
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold mb-1">Account Name</label>
+                        <div class="relative">
+                          <input type="text" name="accountName" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Account Name" required />
+                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-user"></i></span>
+                        </div>
+                      </div>
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label class="block text-xs font-semibold mb-1">Amount</label>
@@ -646,65 +690,10 @@ const wireTransfer = async () => {
                         </div>
                       </div>
                       <div>
-                        <label class="block text-xs font-semibold mb-1">Bank Name</label>
+                        <label class="block text-xs font-semibold mb-1">SWIFT Code</label>
                         <div class="relative">
-                          <input type="text" name="bankname" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Bank of America" required />
-                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-bank"></i></span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label class="block text-xs font-semibold mb-1">Country</label>
-                        <div class="relative">
-                          <input type="text" name="B_country" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="USA" required />
-                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-map-marker"></i></span>
-                        </div>
-                      </div>
-                      <div>
-                        <label class="block text-xs font-semibold mb-1">Account Type</label>
-                        <div class="relative">
-                          <select name="accounttype" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring">
-                            <option value="">Select Account Type</option>
-                            <option value="Checking Account">Checking Account</option>
-                            <option value="Current Account">Current Account</option>
-                            <option value="Savings Account">Savings Account</option>
-                            <option value="Money Market">Money Market</option>
-                            <option value="Fixed Deposit Account">Fixed Deposit Account</option>
-                          </select>
-                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-star"></i></span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label class="block text-xs font-semibold mb-1">Account Name</label>
-                        <div class="relative">
-                          <input type="text" name="accountName" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Jake Chris" required />
-                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-user"></i></span>
-                        </div>
-                      </div>
-                      <div>
-                        <label class="block text-xs font-semibold mb-1">Routing Number</label>
-                        <div class="relative">
-                          <input type="text" name="route" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Routing Number" required />
-                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-route"></i></span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label class="block text-xs font-semibold mb-1">Account Number</label>
-                        <div class="relative">
-                          <input type="text" name="accountNum" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Beneficiary Account Number" required />
-                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-stamp"></i></span>
-                        </div>
-                      </div>
-                      <div>
-                        <label class="block text-xs font-semibold mb-1">Swift Code</label>
-                        <div class="relative">
-                          <input type="text" name="swiftcode" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Swift Code" />
-                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-unlock"></i></span>
+                          <input type="text" name="swift" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="SWIFT Code" required />
+                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-globe"></i></span>
                         </div>
                       </div>
                     </div>
@@ -717,11 +706,18 @@ const wireTransfer = async () => {
                         </div>
                       </div>
                       <div>
-                        <label class="block text-xs font-semibold mb-1">Description</label>
+                        <label class="block text-xs font-semibold mb-1">Account Number</label>
                         <div class="relative">
-                          <textarea name="desc" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Type in the purpose of transfer" required></textarea>
-                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-envelope"></i></span>
+                          <input type="text" name="accountNum" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Beneficiary Account Number" required />
+                          <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-stamp"></i></span>
                         </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold mb-1">Description</label>
+                      <div class="relative">
+                        <textarea name="desc" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring" placeholder="Description" required></textarea>
+                        <span class="absolute right-3 top-2.5 text-gray-400"><i class="fa fa-envelope"></i></span>
                       </div>
                     </div>
                     <div class="flex space-x-2">
@@ -741,13 +737,10 @@ const wireTransfer = async () => {
         </div>
       </div>
       <div id="otp-modal" class="hidden"></div>
+      <div id="success-modal" class="hidden"></div>
     `,
     pageEvents,
   };
 };
 
 export default wireTransfer;
-
-
-
-

