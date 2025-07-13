@@ -723,7 +723,7 @@ const transactions = async () => {
         };
       });
     }
-    attachRowEvents();
+    attachRowEvents(); //
   }
 
   return {
