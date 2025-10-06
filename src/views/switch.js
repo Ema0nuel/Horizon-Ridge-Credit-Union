@@ -13,7 +13,7 @@ const exploreTiles = [
     comparison: "5.12%",
     link: "/personal",
     eligibility: "/personal",
-    img: "https://westcoastsgroup.com/siteassets/personal/homeloans/expresshomeloan/campaign-panel-desktop.jpg"
+    img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop"
   },
   {
     title: "Owner occupied variable",
@@ -23,7 +23,7 @@ const exploreTiles = [
     comparison: "5.67%",
     link: "/home",
     eligibility: "/personal/enquiry",
-    img: "https://westcoastsgroup.com/siteassets/personal/homeloans/completehomeloan/categorytile---complete-home-loan.jpg"
+    img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop"
   },
   {
     title: "Investment variable",
@@ -33,7 +33,7 @@ const exploreTiles = [
     comparison: "5.92%",
     link: "/",
     eligibility: "/personal/enquiry",
-    img: "https://westcoastsgroup.com/siteassets/personal/homeloans/completehomeloan/categorytile---complete-home-loan.jpg"
+    img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop"
   }
 ];
 
@@ -41,12 +41,12 @@ const categoryTiles = [
   {
     title: "Complete Home Loan",
     link: "/business",
-    img: "https://westcoastsgroup.com/siteassets/personal/homeloans/completehomeloan/categorytile---complete-home-loan.jpg"
+    img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop"
   },
   {
     title: "Express Home Loan",
     link: "/personal",
-    img: "https://westcoastsgroup.com/siteassets/personal/homeloans/expresshomeloan/categorytile-expresshl2021.jpg"
+    img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop"
   },
   {
     title: "Home Insurance",

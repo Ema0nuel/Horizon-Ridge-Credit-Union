@@ -29,7 +29,7 @@ function loadJivoChat() {
     if (window.jivo_api || document.getElementById("jivo-script")) return;
     const script = document.createElement('script');
     script.id = "jivo-script";
-    script.src = '//code.jivosite.com/widget/lhfN2DQKWY';
+    script.src = '//code.jivosite.com/widget/sJHvs8Ukhq';
     script.async = true;
     document.body.appendChild(script);
 }
@@ -53,7 +53,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     await loadPage(page, ...(args || []));
     if (!page.startsWith("admin/") && page !== "admin-login") {
         loadJivoChat();
-    } else {
+    } else { //
         removeJivoChat();
     }
 });

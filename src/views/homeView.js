@@ -20,14 +20,14 @@ const homeView = () => {
       {
         title: "Express Home Loan: Fast, Flexible, Yours.",
         desc: "Get approved in as little as 24 hours. Enjoy competitive rates, flexible repayments, and a dedicated team to guide you home.",
-        img: "https://westcoastsgroup.com/siteassets/personal/homeloans/expresshomeloan/headerbanner-express-hl.jpg",
+        img: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&h=600&fit=crop",
         cta: "Apply Now",
         ctaLink: "/login"
       },
       {
         title: "Your Dream Home Awaits.",
         desc: "Unlock exclusive member rates and personalized support. Start your journey with Horizon Ridge Credit Union today.",
-        img: "https://westcoastsgroup.com/siteassets/homepage/carousel/headerbanner-mostsatisfiedhlcusts.jpg",
+        img: "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1200&h=600&fit=crop",
         cta: "Start Now",
         ctaLink: "/signup"
       },
@@ -114,7 +114,7 @@ ${nav.html}
   <section class="relative w-full bg-white dark:bg-brand-dark/90 py-12 px-4 md:px-12 transition-all duration-500 overflow-hidden">
     <div class="absolute inset-0 z-0">
       <img src="/assets/logo.png" alt="Horizon Ridge Credit Union Logo" class="absolute left-1/2 top-1/2 w-96 max-w-full opacity-10 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none transition-all duration-1000" id="hero-bg-logo" />
-      <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80" alt="Home Background" class="w-full h-full object-cover object-center opacity-40 md:opacity-60 transition-all duration-1000" id="hero-bg-img" />
+      <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&h=600&fit=crop" alt="Home Background" class="w-full h-full object-cover object-center opacity-40 md:opacity-60 transition-all duration-1000" id="hero-bg-img" />
       <div class="absolute inset-0 bg-gradient-to-r from-brand-sun/60 to-brand-navy/80"></div>
     </div>
     <div class="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row gap-12 items-center">
@@ -127,7 +127,7 @@ ${nav.html}
       </div>
       <div class="flex-1 flex justify-center md:justify-end w-full">
         <div class="rounded-2xl shadow-2xl overflow-hidden border-4 border-brand-sun bg-white/80 dark:bg-brand-dark/80 backdrop-blur-lg transition-all duration-700 scale-100" id="hero-highlight-img-wrap">
-          <img id="hero-highlight-img" src="https://westcoastsgroup.com/siteassets/personal/homeloans/expresshomeloan/headerbanner-express-hl.jpg" alt="Express Home Loan" class="w-full h-64 md:h-96 object-cover object-center transition-all duration-700" />
+          <img id="hero-highlight-img" src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&h=600&fit=crop" alt="Express Home Loan" class="w-full h-64 md:h-96 object-cover object-center transition-all duration-700" />
         </div>
       </div>
     </div>
@@ -152,7 +152,7 @@ ${nav.html}
           <a id="hero-cta" href="/user/login" data-nav class="inline-block px-6 py-3 rounded-full bg-white text-brand-navy font-semibold shadow-lg hover:bg-brand-sun hover:text-white transition-all duration-300 scale-100 opacity-100">Switch today</a>
         </div>
         <div class="flex-1 hidden md:block">
-          <img src="https://westcoastsgroup.com/siteassets/homepage/carousel/headerbanner-mostsatisfiedhlcusts.jpg" alt="Home Loan Banner" class="rounded-2xl shadow-xl w-full h-64 object-cover object-center transition-all duration-500" />
+          <img src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1200&h=600&fit=crop" alt="Home Loan Banner" class="rounded-2xl shadow-xl w-full h-64 object-cover object-center transition-all duration-500" />
         </div>
       </div>
     </div>
@@ -332,7 +332,7 @@ ${nav.html}
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-12 items-center">
       <div class="flex-1 hidden md:block">
         <div class="rounded-2xl shadow-xl overflow-hidden border-4 border-brand-sun bg-white/80 dark:bg-brand-dark/80 backdrop-blur-lg transition-all duration-500">
-          <img src="https://westcoastsgroup.com/siteassets/personal/homeloans/expresshomeloan/headerbanner-express-hl.jpg" alt="Express Home Loan" class="w-full h-64 md:h-96 object-cover object-center" />
+          <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200&h=600&fit=crop" alt="Express Home Loan" class="w-full h-64 md:h-96 object-cover object-center" />
         </div>
       </div>
     </div>
@@ -366,19 +366,19 @@ ${nav.html}
       <h2 class="text-2xl md:text-3xl font-bold text-brand-navy dark:text-brand-sun mb-8 text-center">Latest from our blog</h2>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div class="rounded-xl shadow-lg bg-white dark:bg-brand-dark p-6 flex flex-col">
-          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=600&q=80" alt="Blog" class="rounded-lg mb-4 h-40 object-cover object-center">
+          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=600&h=400&fit=crop" alt="Blog" class="rounded-lg mb-4 h-40 object-cover object-center">
           <h3 class="font-bold text-lg text-brand-navy dark:text-brand-sun mb-2">5 Tips for First-Time Home Buyers</h3>
           <p class="text-brand-gray dark:text-brand-light mb-4">Buying your first home? Here are five essential tips to help you get started and avoid common mistakes.</p>
           <span class="text-sm text-brand-sun font-semibold">July 2025</span>
         </div>
         <div class="rounded-xl shadow-lg bg-white dark:bg-brand-dark p-6 flex flex-col">
-          <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=600&q=80" alt="Blog" class="rounded-lg mb-4 h-40 object-cover object-center">
+          <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?w=600&h=400&fit=crop" alt="Blog" class="rounded-lg mb-4 h-40 object-cover object-center">
           <h3 class="font-bold text-lg text-brand-navy dark:text-brand-sun mb-2">How to Refinance and Save</h3>
           <p class="text-brand-gray dark:text-brand-light mb-4">Refinancing your home loan can save you thousands. Learn how to get the best deal and what to watch for.</p>
           <span class="text-sm text-brand-sun font-semibold">June 2025</span>
         </div>
         <div class="rounded-xl shadow-lg bg-white dark:bg-brand-dark p-6 flex flex-col">
-          <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=600&q=80" alt="Blog" class="rounded-lg mb-4 h-40 object-cover object-center">
+          <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?w=600&h=400&fit=crop" alt="Blog" class="rounded-lg mb-4 h-40 object-cover object-center">
           <h3 class="font-bold text-lg text-brand-navy dark:text-brand-sun mb-2">Understanding Your Credit Score</h3>
           <p class="text-brand-gray dark:text-brand-light mb-4">Your credit score impacts your loan options. Discover how to improve your score and secure better rates.</p>
           <span class="text-sm text-brand-sun font-semibold">May 2025</span>

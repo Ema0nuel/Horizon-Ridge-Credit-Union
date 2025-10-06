@@ -16,8 +16,8 @@ const support = () => {
       <main id="mainContent" class="main fullWidthPage bg-brand-light dark:bg-brand-dark text-brand-navy dark:text-brand-light" data-pg="FullWidthPage">
         <!-- Header Banner -->
         <section class="relative w-full min-h-[320px] md:min-h-[440px] flex items-center bg-gradient-to-br from-brand-sun/80 to-brand-navy/90">
-          <div class="absolute inset-0 z-0 hidden md:block bg-cover bg-right" style="background-image: url('https://westcoastsgroup.com/siteassets/support/headerbanner-support.jpg');"></div>
-          <div class="absolute inset-0 z-0 md:hidden bg-cover bg-center" style="background-image: url('https://westcoastsgroup.com/siteassets/support/mobilebanner-support.jpg');"></div>
+          <div class="absolute inset-0 z-0 hidden md:block bg-cover bg-right" style="background-image: url('https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop');"></div>
+          <div class="absolute inset-0 z-0 md:hidden bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop');"></div>
           <div class="relative z-10 max-w-5xl mx-auto px-4 py-12 flex flex-col md:flex-row items-center">
             <div class="flex-1 flex flex-col items-center md:items-start text-center md:text-left">
               <h1 class="text-3xl md:text-5xl font-extrabold text-white dark:text-brand-sun mb-4 drop-shadow-lg">Support centre</h1>
@@ -146,7 +146,7 @@ const support = () => {
             <h2 class="text-2xl font-bold text-brand-navy dark:text-brand-sun mb-6">Manage your banking</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div class="bg-white dark:bg-brand-dark border border-brand-sun/20 rounded-xl shadow">
-                <img src="https://westcoastsgroup.com/siteassets/personal/_promotiles/highlightsection-personal.jpg" alt="" class="w-full h-40 object-cover rounded-t-xl" loading="lazy" />
+                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop" alt="" class="w-full h-40 object-cover rounded-t-xl" loading="lazy" />
                 <div class="p-6">
                   <h3 class="text-xl font-bold mb-2">Products</h3>
                   <p class="mb-2">Helping you to manage your products.</p>
@@ -158,7 +158,7 @@ const support = () => {
                 </div>
               </div>
               <div class="bg-white dark:bg-brand-dark border border-brand-sun/20 rounded-xl shadow">
-                <img src="https://westcoastsgroup.com/siteassets/security/_promotiles/highlightsection-security.jpg" alt="" class="w-full h-40 object-cover rounded-t-xl" loading="lazy" />
+                <img src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&h=600&fit=crop" alt="" class="w-full h-40 object-cover rounded-t-xl" loading="lazy" />
                 <div class="p-6">
                   <h3 class="text-xl font-bold mb-2">Security</h3>
                   <p class="mb-2">Keeping you and your family safe.</p>
@@ -170,7 +170,7 @@ const support = () => {
                 </div>
               </div>
               <div class="bg-white dark:bg-brand-dark border border-brand-sun/20 rounded-xl shadow">
-                <img src="https://westcoastsgroup.com/siteassets/waystobank/_promotiles/highlightsection-waystobank.jpg" alt="" class="w-full h-40 object-cover rounded-t-xl" loading="lazy" />
+                <img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=600&fit=crop" alt="" class="w-full h-40 object-cover rounded-t-xl" loading="lazy" />
                 <div class="p-6">
                   <h3 class="text-xl font-bold mb-2">Ways to bank</h3>
                   <p class="mb-2">Supporting you to bank the way you want.</p>

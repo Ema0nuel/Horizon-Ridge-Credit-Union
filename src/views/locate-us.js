@@ -31,11 +31,11 @@ const locateUs = async () => {
         <section class="relative w-full min-h-[320px] md:min-h-[440px] flex items-center">
           <!-- Overlay for darkening the background image -->
           <div class="absolute inset-0 z-0 hidden md:block">
-            <div class="w-full h-full bg-cover bg-right" style="background-image: url('https://westcoastsgroup.com/siteassets/_sharedassets/bannerstileimages/betterbigbank/headerbanner-betterbigbank.jpg');"></div>
+            <div class="w-full h-full bg-cover bg-right" style="background-image: url('https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop');"></div>
             <div class="absolute inset-0 bg-black/50 dark:bg-brand-navy/70"></div>
           </div>
           <div class="absolute inset-0 z-0 md:hidden">
-            <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://westcoastsgroup.com/siteassets/_sharedassets/bannerstileimages/betterbigbank/mobilebanner-betterbigbank.jpg');"></div>
+            <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1552664730-d307ca884978?w=1200&h=600&fit=crop');"></div>
             <div class="absolute inset-0 bg-black/60 dark:bg-brand-navy/80"></div>
           </div>
           <div class="relative z-10 max-w-5xl mx-auto px-4 py-12 flex flex-col md:flex-row items-center">
