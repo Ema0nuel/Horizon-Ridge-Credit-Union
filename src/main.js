@@ -47,7 +47,7 @@ function removeJivoChat() {
     if (widget) widget.remove();
 }
 
-
+// Initial page load
 window.addEventListener("DOMContentLoaded", async () => {
     const { page, args } = parsePathToRoute(window.location.pathname);
     await loadPage(page, ...(args || []));
@@ -57,5 +57,3 @@ window.addEventListener("DOMContentLoaded", async () => {
         removeJivoChat();
     }
 });
-
-// Welcome to the main connect routing page to the branch page and dynamically manage everything...
