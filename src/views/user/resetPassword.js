@@ -13,6 +13,21 @@ const resetPassword = () => {
     function pageEvents() {
         nav.pageEvents?.();
 
+        // Handle Supabase session from recovery link
+        const handleSessionRecovery = async () => {
+            try {
+                const { data, error } = await supabase.auth.refreshSession();
+                if (error) {
+                    console.warn("Session recovery attempted:", error.message);
+                }
+            } catch (err) {
+                console.warn("Could not recover session:", err);
+            }
+        };
+
+        // Call on page load to process URL tokens
+        handleSessionRecovery();
+
         const form = document.getElementById('reset-form');
         const passwordInput = document.getElementById('password');
         const confirmPasswordInput = document.getElementById('confirm-password');
@@ -106,6 +121,17 @@ const resetPassword = () => {
 
                 startLogoSpinner();
                 try {
+                    // Get current session to verify recovery token
+                    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+                    if (!session || sessionError) {
+                        showToast("Session expired. Please request a new password reset link.", "error");
+                        endLogoSpinner();
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = `Reset Password <i class="fas fa-key text-sm"></i>`;
+                        return;
+                    }
+
                     const { error } = await supabase.auth.updateUser({ password });
                     endLogoSpinner();
 
@@ -115,11 +141,13 @@ const resetPassword = () => {
                         submitBtn.innerHTML = `Reset Password <i class="fas fa-key text-sm"></i>`;
                     } else {
                         showToast("Password reset successfully! Redirecting to login...", "success");
+                        // Sign out to clear recovery session
+                        await supabase.auth.signOut();
                         setTimeout(() => window.location.href = "/login", 2000);
                     }
                 } catch (err) {
                     endLogoSpinner();
-                    console.error("Reset password error:", err);
+                    console.error("Password reset error:", err);
                     showToast("Unexpected error. Please try again.", "error");
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = `Reset Password <i class="fas fa-key text-sm"></i>`;
