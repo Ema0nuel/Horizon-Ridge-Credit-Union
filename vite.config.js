@@ -6,5 +6,9 @@ export default defineConfig({
         outDir: 'dist',  // where Vercel looks by default
         assetsDir: 'assets', // optional: keeps assets organized
         emptyOutDir: true
+    },
+    define: {
+        __VITE_SUPABASE_URL__: JSON.stringify(process.env.VITE_SUPABASE_URL),
+        __VITE_SUPABASE_KEY__: JSON.stringify(process.env.VITE_SUPABASE_KEY)
     }
 });
