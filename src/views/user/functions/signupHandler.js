@@ -85,5 +85,5 @@ export async function signupUser(formData, ip) {
   });
 
   // 5. Redirect to authentication view
-  window.location.href = "/user/auth";
+  window.location.href = "/user/dashboard";
 }
