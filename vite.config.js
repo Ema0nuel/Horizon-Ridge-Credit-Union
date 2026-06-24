@@ -10,5 +10,10 @@ export default defineConfig({
     define: {
         __VITE_SUPABASE_URL__: JSON.stringify(process.env.VITE_SUPABASE_URL),
         __VITE_SUPABASE_KEY__: JSON.stringify(process.env.VITE_SUPABASE_KEY)
+    },
+    server: {
+        proxy: {
+            '/api': 'http://localhost:3001'
+        }
     }
 });

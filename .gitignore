@@ -24,4 +24,7 @@ dist-ssr
 *.sw?
 *.env
 .env
+
+# Temp Next.js API migration workspace
+/.temp
 .vercel

@@ -29,7 +29,7 @@ export async function sendEmail({ to, subject, html }) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const res = await fetch('/api/send-email', {
+    const res = await fetch('http://localhost:3001/api/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
