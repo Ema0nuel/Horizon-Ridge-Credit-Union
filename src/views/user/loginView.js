@@ -2,7 +2,7 @@ import navbar from '../../components/navbar';
 import { reset } from '../../utils/reset';
 import { showToast } from '../../components/toast';
 import { startLogoSpinner, endLogoSpinner } from '../../utils/spinner';
-import { loginAndSendOtp } from './functions/loginHandler';
+import { loginAndSendOtp, resendOtp } from './functions/loginHandler';
 import { supabase } from '../../utils/supabaseClient';
 import NoLogo from "/src/images/logo-nobg.png"
 import Logo from "/src/images/logo.jpg"
@@ -101,7 +101,7 @@ const loginView = async () => {
       });
     }
 
-    // Resend OTP
+    // Resend OTP (no password re-auth needed)
     const resendBtn = document.getElementById('resend-otp');
     if (resendBtn) {
       resendBtn.addEventListener('click', async (e) => {
@@ -112,8 +112,7 @@ const loginView = async () => {
         }
         startLogoSpinner();
         try {
-          // Accepts email, username, or account number for resend
-          await loginAndSendOtp(lastAccessID, ""); // Password not needed for resend if you adjust backend logic
+          await resendOtp(lastAccessID);
           showToast("OTP resent to your email.", "info");
         } catch (err) {
           showToast(err.message || "Could not resend OTP.", "error");
