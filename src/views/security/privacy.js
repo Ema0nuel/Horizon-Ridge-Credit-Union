@@ -27,7 +27,7 @@ const privacyView = () => {
               <img src="${Logo}" alt="Horizon Ridge Credit Union" class="h-16 w-auto mb-4 hidden dark:block" />
               <h1 class="text-3xl md:text-5xl font-extrabold text-white mb-4 drop-shadow-lg">Privacy Policy</h1>
               <p class="text-white text-lg">Horizon Ridge Credit Union<br>
-                <a href="mailto:horizonridgecreditunion@gmail.com" class="underline">horizonridgecreditunion@gmail.com</a> &nbsp;|&nbsp; <a href="tel:+15022095647" class="underline">+1 502 209 5647</a>
+                <a href="mailto:contact@horizonridge.cc" class="underline">contact@horizonridge.cc</a> &nbsp;|&nbsp; <a href="tel:+15022095647" class="underline">+1 502 209 5647</a>
               </p>
             </div>
           </div>
@@ -101,7 +101,7 @@ const privacyView = () => {
             <p>From time to time, it may be necessary for us to review this policy and the information contained in this document. We will notify you of any changes by posting an updated version on our website(s).</p>
             <h3 id="contacting-us" class="text-xl font-semibold mt-8 mb-2">Contacting us</h3>
             <p>If you have any questions about this policy, what personal information or credit related information we may hold in relation to you, or about the way we manage your personal information or credit related information you can contact us.</p>
-            <p>Email: <a href="mailto:horizonridgecreditunion@gmail.com" class="underline">horizonridgecreditunion@gmail.com</a><br>
+            <p>Email: <a href="mailto:contact@horizonridge.cc" class="underline">contact@horizonridge.cc</a><br>
             Phone: <a href="tel:+15022095647" class="underline">+1 502 209 5647</a></p>
             <h3 id="privacy-queries-or-complaints" class="text-xl font-semibold mt-8 mb-2">Privacy queries or complaints</h3>
             <p>If you have a query or wish to make a complaint regarding the handling of your personal information, including your credit related information, by us, please contact our Customer Feedback Team. We will promptly investigate your complaint and notify you of the outcome.</p>

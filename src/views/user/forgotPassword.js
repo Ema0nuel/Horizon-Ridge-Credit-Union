@@ -63,7 +63,7 @@ const forgotPassword = () => {
 
                 startLogoSpinner();
                 try {
-                    const redirectUrl = (typeof window !== 'undefined' ? window.location.origin : 'https://www.horizonridgecreditunion.com') + '/reset-password';
+                    const redirectUrl = (typeof window !== 'undefined' ? window.location.origin : 'https://www.horizonridge.cc') + '/reset-password';
                     const { error } = await supabase.auth.resetPasswordForEmail(email, {
                         redirectTo: redirectUrl
                     });

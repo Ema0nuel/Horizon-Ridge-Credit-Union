@@ -1,6 +1,6 @@
 // Local admin validation using localStorage/sessionStorage
 
-const ADMIN_EMAIL = "horizonridgecreditunion@gmail.com";
+const ADMIN_EMAIL = "contact@horizonridge.cc";
 const ADMIN_PASSWORD = "12345EM@";
 
 // Call this on login form submit

@@ -3,7 +3,7 @@ import footer from '../components/footer';
 import { showToast } from '../components/toast';
 import { reset } from '../utils/reset';
 
-const EMAIL = "horizonridgecreditunion@gmail.com";
+const EMAIL = "contact@horizonridge.cc";
 const PHONE = "+15022095647";
 
 const contactView = () => {

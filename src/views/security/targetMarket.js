@@ -27,7 +27,7 @@ const targetMarketView = () => {
               <img src="${Logo}" alt="Horizon Ridge Credit Union" class="h-16 w-auto mb-4 hidden dark:block" />
               <h1 class="text-3xl md:text-5xl font-extrabold text-white mb-4 drop-shadow-lg">Target Market Determinations</h1>
               <p class="text-white text-lg">Horizon Ridge Credit Union<br>
-                <a href="mailto:horizonridgecreditunion@gmail.com" data-nav class="underline">horizonridgecreditunion@gmail.com</a> &nbsp;|&nbsp; <a href="tel:+15022095647" data-nav class="underline">+1 502 209 5647</a>
+                <a href="mailto:contact@horizonridge.cc" data-nav class="underline">contact@horizonridge.cc</a> &nbsp;|&nbsp; <a href="tel:+15022095647" data-nav class="underline">+1 502 209 5647</a>
               </p>
             </div>
           </div>

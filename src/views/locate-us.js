@@ -6,7 +6,7 @@ const branches = [
   {
     name: "Horizon Ridge Credit Union",
     address: "36 Main Street<br>Box Hill VIC 3128",
-    email: "horizonridgecreditunion@gmail.com"
+    email: "contact@horizonridge.cc"
   },
   {
     name: "ATM iStandard GroupMarketplace",

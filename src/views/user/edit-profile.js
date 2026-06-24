@@ -5,7 +5,7 @@ import { reset } from '../../utils/reset';
 import navbar from './components/Navbar';
 import User from "/src/images/user/user.png";
 
-const ADMIN_EMAIL = "horizonridgecreditunion@gmail.com";
+const ADMIN_EMAIL = "contact@horizonridge.cc";
 
 // --- SCHEMA SUGGESTION ---
 // Table: profiles

@@ -115,7 +115,7 @@ const personalEnquiry = () => {
                 </div>
               </div>
               <div class="text-xs text-brand-gray dark:text-brand-light mt-2">
-                We collect your personal information in order to respond to your enquiry and contact you; your personal information may be shared within the Group. This includes subsidiaries, related companies, agencies and franchises. To request access to your personal information, please contact your <a href="/locate" data-nav class="text-brand-sun hover:underline">nearest branch</a> or <a href="mailto:horizonridgecreditunion@gmail.com" class="text-brand-sun hover:underline">horizonridgecreditunion@gmail.com</a>. For more information, please read our <a href="/privacy" data-nav class="text-brand-sun hover:underline">Privacy Policy</a>.
+                We collect your personal information in order to respond to your enquiry and contact you; your personal information may be shared within the Group. This includes subsidiaries, related companies, agencies and franchises. To request access to your personal information, please contact your <a href="/locate" data-nav class="text-brand-sun hover:underline">nearest branch</a> or <a href="mailto:contact@horizonridge.cc" class="text-brand-sun hover:underline">contact@horizonridge.cc</a>. For more information, please read our <a href="/privacy" data-nav class="text-brand-sun hover:underline">Privacy Policy</a>.
               </div>
               <button type="submit" class="mt-4 px-6 py-2 rounded-full bg-brand-navy text-white font-semibold shadow hover:bg-brand-sun transition-all duration-300">Submit</button>
             </form>

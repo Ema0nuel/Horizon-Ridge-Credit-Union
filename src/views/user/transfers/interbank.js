@@ -57,7 +57,7 @@ function generateReceipt(options = {}) {
     companyName: "Horizon Ridge Credit Union",
     companyAddress: "123 Main St, City, Country",
     companyPhone: "+1 (555) 123-4567",
-    companyEmail: "horizonridgecreditunion@gmail.com",
+    companyEmail: "contact@horizonridge.cc",
     additionalFields: {},
     showFooter: true,
     footerText: "Thank you for banking with us!",
@@ -71,7 +71,7 @@ function generateReceipt(options = {}) {
   return `
     <div class="receipt-container font-mono">
       <div class="text-center mb-4">
-        <img src="https://www.horizonridgecreditunion.com/assets/logo-39I1HVw6.jpg" alt="Horizon Ridge Credit Union" class="h-10 mx-auto mb-2" />
+        <img src="https://www.horizonridge.cc/assets/logo-39I1HVw6.jpg" alt="Horizon Ridge Credit Union" class="h-10 mx-auto mb-2" />
         <h2 class="font-bold text-2xl text-gray-900 dark:text-white mb-1">${config.title}</h2>
         <div class="text-base text-gray-700 dark:text-gray-300">${config.companyName}</div>
         <div class="text-xs text-gray-500 dark:text-gray-400">${config.companyAddress}</div>
@@ -578,7 +578,7 @@ const interbankTransfer = async () => {
                       companyName: "Horizon Ridge Credit Union",
                       companyAddress: "123 Main St, City, Country",
                       companyPhone: "+1 (555) 123-4567",
-                      companyEmail: "horizonridgecreditunion@gmail.com",
+                      companyEmail: "contact@horizonridge.cc",
                     }),
                   }),
                 });

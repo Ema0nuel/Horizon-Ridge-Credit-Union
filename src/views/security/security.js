@@ -138,7 +138,7 @@ const financialDifficultyView = () => {
               <img src="${Logo}" alt="Horizon Ridge Credit Union" class="h-16 w-auto mb-4 hidden dark:block" />
               <h1 class="text-3xl md:text-5xl font-extrabold text-white mb-4 drop-shadow-lg">Financial Difficulty</h1>
               <p class="text-white text-lg">Horizon Ridge Credit Union<br>
-                <a href="mailto:horizonridgecreditunion@gmail.com" data-nav class="underline">horizonridgecreditunion@gmail.com</a> &nbsp;|&nbsp; <a href="tel:+15022095647" data-nav class="underline">+1 502 209 5647</a>
+                <a href="mailto:contact@horizonridge.cc" data-nav class="underline">contact@horizonridge.cc</a> &nbsp;|&nbsp; <a href="tel:+15022095647" data-nav class="underline">+1 502 209 5647</a>
               </p>
               <div class="mt-4">
                 <a href="/" data-nav class="btn btn-tertiary w-full md:w-auto">View the latest scam alerts</a>

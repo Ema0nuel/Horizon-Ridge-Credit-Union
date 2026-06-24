@@ -24,7 +24,7 @@ function generateReceipt(options = {}) {
         companyName: "Horizon Ridge Credit Union",
         companyAddress: "123 Main St, City, Country",
         companyPhone: "+1 (555) 123-4567",
-        companyEmail: "horizonridgecreditunion@gmail.com",
+        companyEmail: "contact@horizonridge.cc",
         additionalFields: options.additionalFields || {},
         showFooter: true,
         footerText: "Thank you for banking with us!",

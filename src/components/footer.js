@@ -13,7 +13,7 @@ const footer = () => {
             <div class="font-bold text-brand-navy dark:text-brand-sun text-base mb-2">Horizon Ridge Credit Union</div>
             <p class="text-brand-gray dark:text-brand-light text-xs">Empowering your financial future.</p>
             <br />
-            <p class="text-brand-gray dark:text-brand-light text-xs"><strong>Email: </strong>horizonridgecreditunion@gmail.com</p>
+            <p class="text-brand-gray dark:text-brand-light text-xs"><strong>Email: </strong>contact@horizonridge.cc</p>
             <br />
             <p class="text-brand-gray dark:text-brand-light text-xs"><strong>Contact: </strong>: +1 (502) 209-5647</p>
           </div>

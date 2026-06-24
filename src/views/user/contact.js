@@ -4,7 +4,7 @@ import { sendEmail } from './functions/Emailing/sendEmail';
 import { reset } from '../../utils/reset';
 import navbar from './components/Navbar';
 
-const ADMIN_EMAIL = "horizonridgecreditunion@gmail.com";
+const ADMIN_EMAIL = "contact@horizonridge.cc";
 
 const contact = async () => {
     const nav = navbar();

@@ -6,7 +6,7 @@ import { reset } from "../../utils/reset"
 import User from "/src/images/user/user.png"
 
 
-const ADMIN_EMAIL = "horizonridgecreditunion@gmail.com";
+const ADMIN_EMAIL = "contact@horizonridge.cc";
 
 const profile = async () => {
     reset("Profile")

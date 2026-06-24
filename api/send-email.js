@@ -22,7 +22,7 @@
 
 //   try {
 //     const result = await resend.emails.send({
-//       from: 'Horizon Ridge <support@horizonridgecreditunion.com>',
+//       from: 'Horizon Ridge <support@horizonridge.cc>',
 //       to,
 //       subject,
 //       html,
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
 
   try {
     const result = await resend.emails.send({
-      from: 'Horizon Ridge <support@horizonridgecreditunion.com>',
+      from: 'Horizon Ridge <support@horizonridge.cc>',
       to,
       subject,
       html,
