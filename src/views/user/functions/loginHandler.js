@@ -106,7 +106,7 @@ export async function resendOtp(accessID) {
   if (!userData) throw new Error("No account found with that Access ID.");
   if (!userData.email) throw new Error("Account has no email on file.");
 
-  // Check there's an existing unexpired OTP to reuse its temp_password
+  // Must have an unexpired OTP with temp_password to resend (user already logged in)
   const { data: existingOtp } = await supabase
     .from("login_otps")
     .select("temp_password")
@@ -117,9 +117,11 @@ export async function resendOtp(accessID) {
     .limit(1)
     .maybeSingle();
 
-  const tempPassword = existingOtp?.temp_password || null;
+  if (!existingOtp?.temp_password) {
+    throw new Error("Session expired. Please log in again.");
+  }
 
-  // Generate and store new OTP
+  // Generate and store new OTP with same temp_password
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
@@ -128,7 +130,7 @@ export async function resendOtp(accessID) {
     otp,
     expires_at: expiresAt,
     used: false,
-    temp_password: tempPassword
+    temp_password: existingOtp.temp_password
   });
 
   // Send OTP email
