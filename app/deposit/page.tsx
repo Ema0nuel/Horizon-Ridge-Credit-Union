@@ -74,29 +74,19 @@ export default function DepositPage() {
     JPY: 157.2,
   });
 
-  // Supabase client
   const supabase = createClient();
 
-  // Show toast
   const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current);
-    }
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     setToast({ message, type });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast(null);
-    }, 3000);
+    toastTimeoutRef.current = setTimeout(() => setToast(null), 3000);
   };
 
-  // Check session and fetch profile/account
   useEffect(() => {
     const fetchData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          router.push("/login");
-          return;
-        }
+        if (!user) { router.push("/login"); return; }
 
         const [profileRes, accountRes] = await Promise.all([
           supabase.from("profiles").select("*").eq("id", user.id).single(),
@@ -118,7 +108,6 @@ export default function DepositPage() {
 
     fetchData();
 
-    // Start rates ticker
     const interval = setInterval(() => {
       setRates((prev) => ({
         ...prev,
@@ -131,115 +120,19 @@ export default function DepositPage() {
     return () => clearInterval(interval);
   }, [router, supabase]);
 
-  // Handle gift image change
   const handleGiftImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     setGiftImage(file);
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setGiftImagePreview(reader.result as string);
-      };
+      reader.onloadend = () => setGiftImagePreview(reader.result as string);
       reader.readAsDataURL(file);
     } else {
       setGiftImagePreview(null);
     }
   };
 
-  // Handle deposit form submit
-  const handleDepositSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Basic validation
-    const amountNum = parseFloat(amount);
-    if (isNaN(amountNum) || amountNum < 200) {
-      showToast("Minimum deposit is $200", "error");
-      return;
-    }
-
-    if (!desc.trim()) {
-      showToast("Description is required", "error");
-      return;
-    }
-
-    if (method === "gift") {
-      if (!giftImage) {
-        showToast("Gift card image is required", "error");
-        return;
-      }
-      if (!couponCode.trim()) {
-        showToast("Coupon code is required", "error");
-        return;
-      }
-    }
-
-    setSubmitting(true);
-
-    try {
-      // Generate OTP
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-      // Prepare pending deposit data
-      const balance_before = account?.balance ?? 0;
-      const balance_after = balance_before + amountNum;
-
-      let imageUrl = null;
-      let finalCouponCode = null;
-
-      if (method === "gift") {
-        // Upload gift card image to Supabase storage
-        const file = giftImage!;
-        const uploadPath = `${profile?.id}/${Date.now()}_${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from("gift-cards")
-          .upload(uploadPath, file);
-
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          showToast("Failed to upload gift card image", "error");
-          return;
-        }
-
-        const { data: urlData } = supabase.storage
-          .from("gift-cards")
-          .getPublicUrl(uploadPath);
-        imageUrl = urlData.publicUrl;
-        finalCouponCode = couponCode.trim();
-      }
-
-      // Send OTP email
-      await sendOtpEmail(profile!.email, profile!.full_name, amountNum, desc, otpCode);
-      showToast(`OTP sent to ${profile!.email}`, "info");
-
-      // Set pending deposit and show OTP modal
-      setPendingDeposit({
-        amount: amountNum,
-        desc: desc.trim(),
-        method,
-        imageUrl,
-        couponCode: finalCouponCode,
-        otp: otpCode,
-        balance_before,
-        balance_after,
-      });
-      setOtp("");
-      setShowOtpModal(true);
-    } catch (err: any) {
-      console.error("Deposit error:", err);
-      showToast(err.message || "Failed to process deposit", "error");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Send OTP email function
-  const sendOtpEmail = async (
-    to: string,
-    fullName: string,
-    amount: number,
-    desc: string,
-    otp: string
-  ) => {
+  const sendOtpEmail = async (to: string, fullName: string, amount: number, desc: string, otp: string) => {
     const html = `
       <div style="font-family:sans-serif;max-width:480px;margin:auto;background:#f9f9f9;padding:24px;border-radius:8px;">
         <h2 style="color:#2563eb;">Deposit OTP Verification</h2>
@@ -251,134 +144,95 @@ export default function DepositPage() {
         <p style="color:#888;font-size:12px;">If you did not initiate this, please contact support immediately.</p>
         <hr style="margin:16px 0;">
         <div style="font-size:11px;color:#aaa;">Horizon Ridge Credit Union</div>
-      </div>
-    `;
-
+      </div>`;
     const res = await fetch("/api/send-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        to,
-        subject: "Deposit OTP Verification - Horizon Ridge",
-        html,
-      }),
+      body: JSON.stringify({ to, subject: "Deposit OTP Verification - Horizon Ridge", html }),
     });
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to send OTP email"); }
+  };
 
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || "Failed to send OTP email");
+  const handleDepositSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amountNum = parseFloat(amount);
+    if (isNaN(amountNum) || amountNum < 200) { showToast("Minimum deposit is $200", "error"); return; }
+    if (!desc.trim()) { showToast("Description is required", "error"); return; }
+    if (method === "gift") {
+      if (!giftImage) { showToast("Gift card image is required", "error"); return; }
+      if (!couponCode.trim()) { showToast("Coupon code is required", "error"); return; }
+    }
+
+    setSubmitting(true);
+    try {
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const balance_before = account?.balance ?? 0;
+      const balance_after = balance_before + amountNum;
+      let imageUrl = null, finalCouponCode = null;
+
+      if (method === "gift") {
+        const file = giftImage!;
+        const uploadPath = `${profile?.id}/${Date.now()}_${file.name}`;
+        const { error: uploadError } = await supabase.storage.from("gift-cards").upload(uploadPath, file);
+        if (uploadError) { showToast("Failed to upload gift card image", "error"); return; }
+        const { data: urlData } = supabase.storage.from("gift-cards").getPublicUrl(uploadPath);
+        imageUrl = urlData.publicUrl;
+        finalCouponCode = couponCode.trim();
+      }
+
+      await sendOtpEmail(profile!.email, profile!.full_name, amountNum, desc, otpCode);
+      showToast(`OTP sent to ${profile!.email}`, "info");
+
+      setPendingDeposit({ amount: amountNum, desc: desc.trim(), method, imageUrl, couponCode: finalCouponCode, otp: otpCode, balance_before, balance_after });
+      setOtp("");
+      setShowOtpModal(true);
+    } catch (err: any) {
+      showToast(err.message || "Failed to process deposit", "error");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // Handle OTP form submit
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (otp !== pendingDeposit?.otp) {
-      showToast("Invalid OTP!", "error");
-      return;
-    }
-
+    if (otp !== pendingDeposit?.otp) { showToast("Invalid OTP!", "error"); return; }
     setOtpSubmitting(true);
-
-    // Proceed with deposit
     try {
-      // Insert transaction
       const { error: txError } = await supabase.from("transactions").insert([{
-        account_id: account?.id,
-        user_id: profile?.id,
-        type: "deposit",
-        amount: pendingDeposit!.amount,
-        description: pendingDeposit!.desc,
-        balance_before: pendingDeposit!.balance_before,
-        balance_after: pendingDeposit!.balance_after,
-        status: "pending",
+        account_id: account?.id, user_id: profile?.id, type: "deposit",
+        amount: pendingDeposit!.amount, description: pendingDeposit!.desc,
+        balance_before: pendingDeposit!.balance_before, balance_after: pendingDeposit!.balance_after, status: "pending",
       }]);
-
       if (txError) throw txError;
 
-      // If gift card, also insert into gift_card_deposits
       if (pendingDeposit!.method === "gift") {
         const { error: giftError } = await supabase.from("gift_card_deposits").insert([{
-          user_id: profile?.id,
-          image_url: pendingDeposit!.imageUrl,
-          coupon_code: pendingDeposit!.couponCode,
-          amount: pendingDeposit!.amount,
-          status: "pending",
+          user_id: profile?.id, image_url: pendingDeposit!.imageUrl,
+          coupon_code: pendingDeposit!.couponCode, amount: pendingDeposit!.amount, status: "pending",
         }]);
         if (giftError) throw giftError;
       }
 
-      // Send success email
-      await sendDepositEmail(
-        profile!.email,
-        profile!.full_name,
-        pendingDeposit!.amount,
-        pendingDeposit!.desc,
-        pendingDeposit!.method,
-        pendingDeposit!.imageUrl,
-        pendingDeposit!.couponCode
-      );
-
-      // Show success
       showToast("Deposit submitted and pending approval.", "success");
       setShowOtpModal(false);
-      // Reset form
-      setAmount("");
-      setDesc("");
-      setMethod("bank");
-      setGiftImage(null);
-      setGiftImagePreview(null);
-      setCouponCode("");
-      // Optionally reload
+      setAmount(""); setDesc(""); setMethod("bank"); setGiftImage(null); setGiftImagePreview(null); setCouponCode("");
       setTimeout(() => window.location.reload(), 1200);
     } catch (err: any) {
-      console.error("Deposit error:", err);
       showToast("Deposit failed: " + err.message, "error");
     } finally {
       setOtpSubmitting(false);
     }
   };
 
-  // Send deposit email function
-  const sendDepositEmail = async (
-    to: string,
-    fullName: string,
-    amount: number,
-    desc: string,
-    method: string,
-    imageUrl: string | null,
-    couponCode: string | null
-  ) => {
-    const html = `
-      <div style="font-family:sans-serif;max-width:480px;margin:auto;background:#f9f9f9;padding:24px;border-radius:8px;">
-        <h2 style="color:#2563eb;">Deposit Request Initiated</h2>
-        <p>Hello <b>${fullName}</b>,</p>
-        <p>Your deposit request has been received:</p>
-        <ul style="margin:12px 0 16px 18px;padding:0;font-size:15px;">
-          <li><b>Amount:</b> ${fmt(amount)}</li>
-          <li><b>Description:</b> ${desc}</li>
-          <li><b>Account:</b> ${account?.account_number}</li>
-          <li><b>Date/Time:</b> ${new Date().toLocaleString()}</li>
-        </ul>
-        <p style="color:#888;font-size:12px;">We will notify you once your deposit is confirmed.</p>
-        <hr style="margin:16px 0;">
-        <div style="font-size:11px;color:#aaa;">Horizon Ridge Credit Union</div>
-      </div>
-    `;
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-  };
-
   if (loading) {
     return (
       <DashboardShell>
         <div className="flex items-center justify-center min-h-[80vh]">
-        <div className="text-center">
-          <i className="fa fa-spinner fa-spin text-3xl text-brand-sun mb-2"></i>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Loading...</p>
+          <div className="text-center">
+            <i className="fa fa-spinner fa-spin text-3xl text-brand-sun mb-2" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading...</p>
+          </div>
         </div>
-      </div>
       </DashboardShell>
     );
   }
@@ -386,268 +240,175 @@ export default function DepositPage() {
   if (error) {
     return (
       <DashboardShell>
-        <div className="p-6 text-red-500 bg-red-50 rounded-lg mb-6">
-          <p>{error}</p>
-        </div>
+        <div className="p-4 text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg mx-4 mt-4"><p>{error}</p></div>
       </DashboardShell>
     );
   }
 
   return (
     <DashboardShell>
-      <div className="p-4 md:p-6 max-w-7xl mx-auto">
+      <div className="px-4 py-4 md:p-6 max-w-3xl mx-auto">
         {/* Toast */}
         {toast && (
-          <div className={`mb-4 p-4 rounded-lg ${toast.type === "success" ? "bg-green-50 dark:bg-green-900/20" : toast.type === "error" ? "bg-red-50 dark:bg-red-900/20" : "bg-brand-navy/5 dark:bg-brand-navy/20"} border ${toast.type === "success" ? "border-green-200 dark:border-green-800" : toast.type === "error" ? "border-red-200 dark:border-red-800" : "border-brand-navy/20 dark:border-brand-navy/50"}`}>
-            <div className="flex items-start">
-              {toast.type === "success" && <i className="fa-solid fa-circle-check text-green-500 mt-0.5 mr-3" />}
-              {toast.type === "error" && <i className="fa-solid fa-circle-exclamation text-red-500 mt-0.5 mr-3" />}
-              {toast.type === "info" && <i className="fa-solid fa-circle-info text-brand-sun mt-0.5 mr-3" />}
-              <div>
-                <p className={`text-sm font-medium ${toast.type === "success" ? "text-green-800 dark:text-green-300" : toast.type === "error" ? "text-red-800 dark:text-red-300" : "text-brand-navy dark:text-brand-light"}`}>
-                  {toast.message}
-                </p>
-              </div>
+          <div className={`mb-4 p-3 rounded-lg text-sm ${
+            toast.type === "success" ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800" :
+            toast.type === "error" ? "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800" :
+            "bg-brand-navy/5 dark:bg-brand-navy/20 text-brand-navy dark:text-brand-light border border-brand-navy/20 dark:border-brand-navy/50"
+          }`}>
+            <div className="flex items-center gap-2">
+              {toast.type === "success" && <i className="fa-solid fa-circle-check text-green-500" />}
+              {toast.type === "error" && <i className="fa-solid fa-circle-exclamation text-red-500" />}
+              {toast.type === "info" && <i className="fa-solid fa-circle-info text-brand-sun" />}
+              <p className="font-medium">{toast.message}</p>
             </div>
           </div>
         )}
 
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mb-4">
-          <Link href="/">
-            <i className="fa-solid fa-house" />
-          </Link>
-          <span>/</span>
-          <span className="text-gray-700 dark:text-gray-200">Deposit</span>
-        </nav>
+        {/* Page Header */}
+        <div className="mb-4">
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Deposit Funds</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Add money to your account</p>
+        </div>
 
-        {/* Account info cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Account Balance</p>
-                <h3 className="text-lg font-semibold text-brand-sun dark:text-brand-sun">
-                  {fmt(account?.balance)}
-                </h3>
+        {/* Compact Account Info */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-brand-sun/10 dark:bg-brand-sun/20 flex items-center justify-center">
+                <i className="fa-solid fa-briefcase text-brand-sun text-sm" />
               </div>
-              <div className="p-2.5 rounded-full bg-brand-sun/10 dark:bg-brand-sun/20">
-                <i className="fa-solid fa-briefcase text-brand-sun text-lg" />
+              <div>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">Available Balance</p>
+                <p className="text-base font-bold text-gray-900 dark:text-white">{fmt(account?.balance)}</p>
               </div>
             </div>
-          </div>
-          <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Account Status</p>
-                <h3 className="text-lg font-semibold text-green-600 dark:text-green-400">
-                  {account?.is_active ? "Active" : "Inactive"}
-                </h3>
-              </div>
-              <div className="p-2.5 rounded-full bg-green-50 dark:bg-green-900/30">
-                <i className="fa-solid fa-circle-check text-green-500 text-lg" />
-              </div>
-            </div>
-          </div>
-          <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Account Type</p>
-                <h3 className="text-lg font-semibold text-orange-600 dark:text-orange-400">
-                  {account?.account_type || "USD SAVING"}
-                </h3>
-              </div>
-              <div className="p-2.5 rounded-full bg-orange-50 dark:bg-orange-900/30">
-                <i className="fa-solid fa-star text-orange-500 text-lg" />
-              </div>
+            <div className="text-right">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500">{account?.account_type || "USD SAVING"}</p>
+              <p className={`text-[10px] font-medium ${account?.is_active ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                {account?.is_active ? "Active" : "Inactive"}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Exchange rates */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 mb-6">
+        {/* Exchange Rates */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 mb-4">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white"><i className="fa-solid fa-bank mr-2"></i> Deposit</h3>
-          </div>
-          <div className="mb-4">
-            <div className="flex gap-4 text-xs">
-              <div>USD/EUR: <span className="js-rate font-semibold" data-cur="EUR">{rates.EUR}</span></div>
-              <div>USD/GBP: <span className="js-rate font-semibold" data-cur="GBP">{rates.GBP}</span></div>
-              <div>USD/JPY: <span className="js-rate font-semibold" data-cur="JPY">{rates.JPY}</span></div>
+            <h3 className="text-xs font-semibold text-gray-900 dark:text-white">Deposit</h3>
+            <div className="flex gap-3 text-[10px] text-gray-500 dark:text-gray-400">
+              <span>EUR: <span className="font-semibold text-gray-700 dark:text-gray-200">{rates.EUR}</span></span>
+              <span>GBP: <span className="font-semibold text-gray-700 dark:text-gray-200">{rates.GBP}</span></span>
+              <span>JPY: <span className="font-semibold text-gray-700 dark:text-gray-200">{rates.JPY}</span></span>
             </div>
           </div>
 
-          {/* Deposit form */}
-          <form onSubmit={handleDepositSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs mb-1">Amount</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="200"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
-                    placeholder="$500"
-                    required
-                  />
-                  <span className="absolute right-2 top-2 text-gray-400"><i className="fa-solid fa-money"></i></span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs mb-1">Description</label>
-                <div className="relative">
-                  <textarea
-                    value={desc}
-                    onChange={(e) => setDesc(e.target.value)}
-                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
-                    placeholder="Description"
-                    required
-                  />
-                  <span className="absolute right-2 top-2 text-gray-400"><i className="fa-solid fa-envelope"></i></span>
-                </div>
-              </div>
-            </div>
-
+          <form onSubmit={handleDepositSubmit} className="space-y-3">
             <div>
-              <label className="block text-xs mb-1">Deposit Method</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Amount (USD)</label>
+              <input
+                type="number" min="200" value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+                placeholder="$500" required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Description</label>
+              <textarea
+                value={desc} onChange={(e) => setDesc(e.target.value)}
+                className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition resize-none"
+                placeholder="What is this deposit for?" rows={2} required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Method</label>
               <select
-                value={method}
-                onChange={(e) => setMethod(e.target.value as "bank" | "gift")}
-                className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
-                required
+                value={method} onChange={(e) => setMethod(e.target.value as "bank" | "gift")}
+                className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-sm text-brand-navy dark:text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
               >
                 <option value="bank">Bank Transfer</option>
                 <option value="gift">Gift Card Coupon</option>
               </select>
             </div>
 
-            {/* Gift card section */}
             {method === "gift" && (
-              <div id="gift-card-section" className="mt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs mb-1">Gift Card Image</label>
-                    <input
-                      type="file"
-                      id="gift-image"
-                      accept="image/*"
-                      onChange={handleGiftImageChange}
-                      className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
-                    />
-                    {giftImagePreview && (
-                      <img
-                        src={giftImagePreview}
-                        alt="Gift card preview"
-                        className="hidden mt-2 rounded w-32 h-20 object-cover border"
-                      />
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-1">Coupon Code</label>
-                    <input
-                      type="text"
-                      name="coupon_code"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
-                      maxLength={50}
-                    />
-                  </div>
+              <div className="space-y-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Gift Card Image</label>
+                  <input
+                    type="file" accept="image/*" onChange={handleGiftImageChange}
+                    className="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-brand-sun/10 file:text-brand-sun hover:file:bg-brand-sun/20"
+                  />
+                  {giftImagePreview && (
+                    <img src={giftImagePreview} alt="Gift card preview" className="mt-2 rounded-lg w-24 h-16 object-cover border border-gray-200 dark:border-gray-700" />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Coupon Code</label>
+                  <input
+                    type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value)}
+                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+                    placeholder="Enter code" maxLength={50}
+                  />
                 </div>
               </div>
             )}
 
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-4 py-1 rounded bg-brand-sun text-white font-semibold text-sm shadow-sm hover:bg-brand-navy disabled:opacity-50 disabled:cursor-not-allowed"
+            <div className="flex gap-3 pt-2">
+              <button type="submit" disabled={submitting}
+                className="flex-1 py-3 rounded-xl bg-brand-sun text-white font-semibold text-sm shadow-sm hover:bg-brand-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
               >
-                {submitting ? (
-                  <i className="fa-solid fa-spinner fa-spin"></i>
-                ) : (
-                  <i className="fa-solid fa-money"></i>
-                )} {submitting ? "Processing..." : "Deposit"}
+                {submitting ? <><i className="fa-solid fa-spinner fa-spin mr-1" /> Processing...</> : <><i className="fa-solid fa-check mr-1" /> Deposit</>}
               </button>
-              <button
-                type="reset"
-                className="btn bg-gray-200 text-gray-700 px-4 py-1 rounded text-xs"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setAmount("");
-                  setDesc("");
-                  setMethod("bank");
-                  setGiftImage(null);
-                  setGiftImagePreview(null);
-                  setCouponCode("");
-                }}
+              <button type="reset"
+                onClick={() => { setAmount(""); setDesc(""); setMethod("bank"); setGiftImage(null); setGiftImagePreview(null); setCouponCode(""); }}
+                className="px-5 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                <i className="fa-solid fa-refresh"></i> Refresh
+                Reset
               </button>
             </div>
           </form>
         </div>
 
-        {/* OTP Modal */}
+        {/* OTP Bottom Sheet */}
         {showOtpModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-md mx-4 p-6 relative">
-              <button
-                id="close-otp-modal"
-                className="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg"
-                onClick={() => setShowOtpModal(false)}
-              >
-                &times;
-              </button>
-              <h4 className="text-base font-semibold mb-2 text-gray-900 dark:text-white">Deposit OTP Verification</h4>
-              <div className="mb-2 text-xs text-gray-500 dark:text-gray-300">
-                Enter the OTP sent to your email to confirm your deposit.
+          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setShowOtpModal(false)} />
+            <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl md:rounded-2xl w-full max-w-md mx-auto shadow-2xl animate-slide-up pb-6 md:pb-4">
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
               </div>
-              <form onSubmit={handleOtpSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1 font-semibold">OTP</label>
-                  <input
-                    type="text"
-                    name="otp"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
-                    maxLength={6}
-                    required
-                  />
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="submit"
-                    disabled={otpSubmitting}
-                    className="px-4 py-1 rounded bg-brand-sun text-white font-semibold text-sm shadow-sm hover:bg-brand-navy disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {otpSubmitting ? (
-                      <i className="fa-solid fa-spinner fa-spin"></i>
-                    ) : (
-                      <i className="fa-solid fa-check"></i>
-                    )} {otpSubmitting ? "Confirming..." : "Confirm"}
-                  </button>
-                  <button
-                    type="button"
-                    className="px-4 py-1 rounded bg-gray-200 text-gray-700 text-sm"
-                    onClick={() => setShowOtpModal(false)}
-                  >
-                    Cancel
+              <div className="px-6 pt-2 pb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-base font-semibold text-gray-900 dark:text-white">OTP Verification</h4>
+                  <button onClick={() => setShowOtpModal(false)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <i className="fa-solid fa-xmark text-lg" />
                   </button>
                 </div>
-              </form>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                  Enter the 6-digit code sent to {profile?.email || "your email"}
+                </p>
+                <form onSubmit={handleOtpSubmit} className="space-y-4">
+                  <div>
+                    <input
+                      type="text" value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      className="block w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-lg text-center tracking-[0.5em] font-mono text-brand-navy dark:text-brand-light placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+                      placeholder="000000" maxLength={6} required autoFocus
+                    />
+                  </div>
+                  <button type="submit" disabled={otpSubmitting || otp.length !== 6}
+                    className="w-full py-3 rounded-xl bg-brand-sun text-white font-semibold text-sm shadow-sm hover:bg-brand-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+                  >
+                    {otpSubmitting ? <><i className="fa-solid fa-spinner fa-spin mr-1" /> Confirming...</> : "Confirm Deposit"}
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Footer */}
-        <footer className="mt-8 text-center text-xs text-gray-400 dark:text-gray-500 py-4">
-          <p>
-            <strong>Copyright © {new Date().getFullYear()}</strong> All rights reserved | Horizon Ridge Credit Union.
-          </p>
+        <footer className="text-center text-[10px] text-gray-400 dark:text-gray-500 py-4">
+          Copyright &copy; {new Date().getFullYear()} All rights reserved | Horizon Ridge Credit Union.
         </footer>
       </div>
     </DashboardShell>

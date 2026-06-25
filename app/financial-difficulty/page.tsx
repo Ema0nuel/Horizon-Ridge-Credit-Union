@@ -150,7 +150,7 @@ export default function FinancialDifficultyPage() {
               <p className="mb-4">Please contact our team who will promptly investigate your complaint and notify you the outcome.</p>
             </div>
             <div>
-              <Link href="/contact" className="inline-block w-full px-4 py-2 rounded-full border-2 border-brand-sun text-brand-sun hover:bg-brand-sun hover:text-white transition font-semibold text-center mb-3">
+              <Link href="/contact-us" className="inline-block w-full px-4 py-2 rounded-full border-2 border-brand-sun text-brand-sun hover:bg-brand-sun hover:text-white transition font-semibold text-center mb-3">
                 Resolve a complaint
               </Link>
             </div>

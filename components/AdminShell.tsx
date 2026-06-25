@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin, adminLogout } from "@/lib/adminAuth";
-import { useTheme } from "@/components/ThemeProvider";
 
 const sidebarItems = [
   { key: "dashboard", label: "Dashboard", icon: "fa-chart-pie", href: "/admin/dashboard" },
@@ -26,7 +25,6 @@ export default function AdminShell({
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authed, setAuthed] = useState(false);
-  const { dark: isDark, toggleTheme: toggleDark } = useTheme();
 
   useEffect(() => {
     if (!requireAdmin()) {
@@ -107,16 +105,6 @@ export default function AdminShell({
               </h2>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={toggleDark}
-                className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                {isDark ? (
-                  <i className="fa-regular fa-sun text-base" />
-                ) : (
-                  <i className="fa-regular fa-moon text-base" />
-                )}
-              </button>
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-danger hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors"

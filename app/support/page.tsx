@@ -197,7 +197,7 @@ export default function SupportPage() {
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-2xl font-bold text-brand-navy dark:text-brand-sun mb-6">Contact us</h2>
             <div className="flex flex-col md:flex-row gap-4">
-              <Link href="/contact" className="flex items-center p-4 border rounded-lg bg-white dark:bg-brand-dark border-brand-sun/20 hover:shadow transition">
+              <Link href="/contact-us" className="flex items-center p-4 border rounded-lg bg-white dark:bg-brand-dark border-brand-sun/20 hover:shadow transition">
                 <i className="fa-solid fa-envelope-open-text text-brand-sun text-2xl mr-4"></i>
                 <span className="font-semibold">Online</span>
               </Link>

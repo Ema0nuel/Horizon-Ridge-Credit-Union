@@ -185,7 +185,7 @@ export default function PersonalPage() {
             <h2 className="text-xl font-bold text-brand-navy dark:text-brand-sun mb-4">How to apply for a loan</h2>
             <ul className="list-disc pl-6 space-y-2 text-sm text-gray-600 dark:text-gray-300">
               <li>Select the loan that is most suited to you</li>
-              <li><Link href="/login" className="text-brand-sun hover:underline">Apply online</Link> or <Link href="/contact" className="text-brand-sun hover:underline">contact us</Link></li>
+              <li><Link href="/login" className="text-brand-sun hover:underline">Apply online</Link> or <Link href="/contact-us" className="text-brand-sun hover:underline">contact us</Link></li>
               <li>Send supporting documentation so that we can finalize your application</li>
               <li>Receive a response to your application and you will be one step closer to getting that new car, holiday, caravan, home improvements, whatever in no time at all.</li>
             </ul>

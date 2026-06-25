@@ -5,12 +5,26 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabaseClient";
-import { useTheme } from "@/components/ThemeProvider";
 
 interface Profile {
   full_name: string;
   avatar_url?: string;
 }
+
+const MOBILE_TABS = [
+  { href: "/dashboard", icon: "fa-house", label: "Home" },
+  { href: null, icon: "fa-arrow-right-arrow-left", label: "Transfer", isAction: true },
+  { href: "/cards", icon: "fa-credit-card", label: "Cards" },
+  { href: "/account-summary", icon: "fa-clock-rotate", label: "Activity" },
+];
+
+const TRANSFER_ACTIONS = [
+  { href: "/deposit", icon: "fa-arrow-right-to-bracket", label: "Deposit", desc: "Add funds" },
+  { href: "/withdrawal", icon: "fa-money-bill-transfer", label: "Withdraw", desc: "Send to bank" },
+  { href: "/local-transfer", icon: "fa-location-dot", label: "Local Transfer", desc: "Within HRCU" },
+  { href: "/interbank-transfer", icon: "fa-building-columns", label: "Inter-Bank", desc: "Other banks" },
+  { href: "/wire-transfer", icon: "fa-coins", label: "Wire Transfer", desc: "International" },
+];
 
 export default function DashboardShell({
   children,
@@ -22,9 +36,8 @@ export default function DashboardShell({
   const [profile, setProfile] = useState<Profile | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { dark: isDarkMode, toggleTheme: toggleDark } = useTheme();
+  const [transferSheetOpen, setTransferSheetOpen] = useState(false);
 
   useEffect(() => {
     const collapsed = localStorage.getItem("hrcu_sidebar") === "true";
@@ -104,16 +117,19 @@ export default function DashboardShell({
     },
   ];
 
+  // Determine active mobile tab
+  const activeTab = MOBILE_TABS.find((t) => t.href && pathname.startsWith(t.href))?.href || "/dashboard";
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-16 md:pb-0">
       {/* Navbar */}
-      <header className="fixed top-0 left-0 right-0 z-50 h-12 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 h-14 md:h-12 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="flex items-center justify-between h-full px-3">
           <div className="flex items-center gap-2">
             <button
               onClick={toggleSidebar}
               aria-label="Toggle sidebar"
-              className="p-1.5 rounded text-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="hidden md:inline-flex p-1.5 rounded text-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               <i className="fa-solid fa-bars text-sm" />
             </button>
@@ -121,48 +137,33 @@ export default function DashboardShell({
               <Image
                 src="/images/logo.jpg"
                 alt="Horizon Ridge"
-                width={28}
-                height={28}
-                className="h-7 w-auto"
+                width={36}
+                height={36}
+                className="h-9 w-auto"
               />
             </Link>
           </div>
           <div className="flex items-center gap-2">
-            {/* Notifications */}
-            <div className="relative">
-              <button
-                onClick={() => setNotifOpen(!notifOpen)}
-                aria-label="Notifications"
-                className="relative p-1.5 rounded text-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              >
-                <i className="fa-regular fa-bell text-sm" />
-                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] rounded-full h-3.5 w-3.5 flex items-center justify-center" />
-              </button>
-              {notifOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50">
-                    <div className="p-2 border-b border-gray-200 dark:border-gray-700">
-                      <h3 className="font-medium text-gray-900 dark:text-white text-xs">Notifications</h3>
-                    </div>
-                    <div className="p-4 text-center text-xs text-gray-400 dark:text-gray-500">
-                      No new notifications
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
             {/* User menu */}
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex items-center gap-2 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                <div className="h-7 w-7 rounded-full bg-brand-sun flex items-center justify-center text-white text-xs font-medium">
-                  {profile?.full_name?.charAt(0) || "U"}
-                </div>
-                <span className="text-xs font-normal text-gray-900 dark:text-gray-100 hidden sm:block">
+                {profile?.avatar_url ? (
+                  <Image
+                    src={profile.avatar_url}
+                    alt={profile.full_name || "User"}
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-brand-sun flex items-center justify-center text-white text-xs font-medium">
+                    {profile?.full_name?.charAt(0) || "U"}
+                  </div>
+                )}
+                <span className="text-xs font-medium text-gray-900 dark:text-gray-100 hidden sm:block">
                   {profile?.full_name || "User"}
                 </span>
                 <i className="fa-solid fa-caret-down text-[10px] text-gray-500 dark:text-gray-300" />
@@ -194,18 +195,6 @@ export default function DashboardShell({
               )}
             </div>
 
-            {/* Theme toggle */}
-            <button
-              onClick={toggleDark}
-              aria-label="Toggle dark mode"
-              className="p-1.5 rounded text-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              {isDarkMode ? (
-                <i className="fa-regular fa-sun text-sm" />
-              ) : (
-                <i className="fa-regular fa-moon text-sm" />
-              )}
-            </button>
           </div>
         </div>
       </header>
@@ -220,7 +209,7 @@ export default function DashboardShell({
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-12 bottom-0 z-40 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 shadow-sm overflow-y-auto transition-transform duration-300 md:transition-[width] md:duration-300 ${
+        className={`fixed left-0 top-14 md:top-12 bottom-0 z-40 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 shadow-sm overflow-y-auto transition-transform duration-300 md:transition-[width] md:duration-300 ${
           sidebarCollapsed ? "md:w-14" : "md:w-56"
         } w-64 ${
           mobileSidebarOpen
@@ -268,12 +257,98 @@ export default function DashboardShell({
 
       {/* Main content */}
       <div
-        className={`pt-12 transition-[margin] duration-300 ${
+        className={`pt-14 md:pt-12 transition-[margin] duration-300 ${
           sidebarCollapsed ? "md:ml-14" : "md:ml-56"
         } ml-0`}
       >
         {children}
       </div>
+
+      {/* Bottom Tab Bar - Mobile Only */}
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 safe-area-bottom">
+        <div className="flex items-center justify-around h-14 px-1">
+          {MOBILE_TABS.map((tab, i) => {
+            if (tab.isAction) {
+              // Center FAB-style action button
+              return (
+                <button
+                  key={i}
+                  onClick={() => setTransferSheetOpen(true)}
+                  className="relative -top-3 flex flex-col items-center justify-center w-14 h-14 rounded-full bg-brand-sun text-white shadow-lg hover:bg-brand-navy transition-colors active:scale-95"
+                  aria-label="Transfer funds"
+                >
+                  <i className="fa-solid fa-arrow-right-arrow-left text-lg" />
+                </button>
+              );
+            }
+            const isActive = pathname === tab.href || (tab.href && pathname.startsWith(tab.href));
+            return (
+              <Link
+                key={i}
+                href={tab.href!}
+                className={`flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-lg min-w-[56px] transition-colors ${
+                  isActive
+                    ? "text-brand-sun"
+                    : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                }`}
+              >
+                <i className={`fa-solid ${tab.icon} text-lg leading-none`} />
+                <span className="text-[10px] font-medium leading-tight">{tab.label}</span>
+              </Link>
+            );
+          })}
+          {/* Empty spacer at end to avoid JivoChat overlap */}
+          <div className="min-w-[56px]" />
+        </div>
+      </nav>
+
+      {/* Transfer Action Sheet */}
+      {transferSheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setTransferSheetOpen(false)}
+          />
+          <div className="relative bg-white dark:bg-gray-900 rounded-t-2xl md:rounded-2xl w-full max-w-md mx-auto shadow-2xl animate-slide-up pb-6 md:pb-4">
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
+            </div>
+
+            <div className="px-6 pb-4">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+                Transfer Funds
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                Choose a transfer method
+              </p>
+
+              <div className="grid grid-cols-2 gap-3">
+                {TRANSFER_ACTIONS.map((action, i) => (
+                  <Link
+                    key={i}
+                    href={action.href}
+                    onClick={() => setTransferSheetOpen(false)}
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:bg-brand-sun/5 hover:border-brand-sun/30 transition-colors active:scale-[0.97]"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-brand-sun/10 dark:bg-brand-sun/20 flex items-center justify-center">
+                      <i className={`fa-solid ${action.icon} text-brand-sun text-base`} />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-semibold text-gray-900 dark:text-white">
+                        {action.label}
+                      </p>
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                        {action.desc}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

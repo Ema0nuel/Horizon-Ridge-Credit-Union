@@ -21,10 +21,24 @@ export default function LoginPage() {
   const otpRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.push("/dashboard");
-    });
+    // Restore OTP state from sessionStorage if pending
+    const pendingAccessID = sessionStorage.getItem("hrcu_otp_pending");
+    if (pendingAccessID) {
+      setAccessID(pendingAccessID);
+      setOtpStep(true);
+      setResendTimer(30);
+      setTimeout(() => otpRef.current?.focus(), 100);
+      return;
+    }
+
+    // Only redirect to dashboard if no OTP pending
+    const hasOtpCookie = document.cookie.includes("login_otp_pending=true");
+    if (!hasOtpCookie) {
+      const supabase = createClient();
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) router.push("/dashboard");
+      });
+    }
   }, [router]);
 
   useEffect(() => {
@@ -46,6 +60,9 @@ export default function LoginPage() {
       setSubmittingLogin(true);
       try {
         await loginAndSendOtp(accessID, password);
+        // Persist OTP state across refresh
+        sessionStorage.setItem("hrcu_otp_pending", accessID);
+        document.cookie = "login_otp_pending=true; path=/; max-age=600";
         setOtpStep(true);
         setResendTimer(30);
         setTimeout(() => otpRef.current?.focus(), 100);
@@ -62,6 +79,9 @@ export default function LoginPage() {
       setSubmittingOtp(true);
       try {
         await verifyOtp(accessID, otp);
+        // Clear OTP pending state
+        sessionStorage.removeItem("hrcu_otp_pending");
+        document.cookie = "login_otp_pending=; path=/; max-age=0";
         router.push("/dashboard");
       } catch (err: any) {
         setError(err.message || "Invalid OTP.");

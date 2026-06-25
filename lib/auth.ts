@@ -62,7 +62,7 @@ export async function loginAndSendOtp(accessID: string, password: string) {
   if (!userData) throw new Error("No account found with that Access ID.");
   if (!userData.email) throw new Error("Account has no email on file.");
 
-  // Authenticate with Supabase Auth
+  // Authenticate with Supabase Auth to validate password
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email: userData.email,
     password,
@@ -77,17 +77,22 @@ export async function loginAndSendOtp(accessID: string, password: string) {
 
   if (!authData?.user) throw new Error("Authentication failed. Please try again.");
 
-  // Generate and store OTP
+  // Sign out immediately — OTP verification will re-authenticate.
+  // This prevents auto-login on page refresh before OTP is verified.
+  await supabase.auth.signOut();
+
+  // Generate and store OTP. Store encoded password in temp_password
+  // so verifyOtp can re-authenticate after OTP success.
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-  const sessionToken = crypto.randomUUID();
+  const encodedPassword = btoa(password);
 
   await supabase.from("login_otps").insert({
     user_id: userData.id,
     otp,
     expires_at: expiresAt,
     used: false,
-    temp_password: sessionToken,
+    temp_password: encodedPassword,
   });
 
   // Send OTP via the API route
@@ -148,6 +153,18 @@ export async function verifyOtp(accessID: string, otp: string) {
 
   if (new Date(otpData.expires_at) < new Date()) {
     throw new Error("OTP has expired. Request a new one.");
+  }
+
+  // Re-authenticate with stored password to create Supabase session
+  if (otpData.temp_password) {
+    const password = atob(otpData.temp_password);
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: userData.email,
+      password,
+    });
+    if (signInError) {
+      throw new Error("Could not complete login. Please try again.");
+    }
   }
 
   const { error: updateError } = await supabase

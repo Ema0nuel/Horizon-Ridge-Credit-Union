@@ -15,7 +15,7 @@ export default function PublicLayoutWrapper({
   const pathname = usePathname();
 
   const isAuth = authPaths.some((p) => pathname === p);
-  const isDashboard = dashboardPrefix.some((p) => pathname.startsWith(p));
+  const isDashboard = dashboardPrefix.some((p) => pathname === p || pathname.startsWith(p + "/"));
   const isAdmin = pathname.startsWith("/admin");
   const hideLayout = isAuth || isDashboard || isAdmin;
 

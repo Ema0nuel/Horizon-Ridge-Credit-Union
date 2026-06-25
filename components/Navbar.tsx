@@ -3,13 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTheme } from "./ThemeProvider";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const { dark, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -27,7 +25,7 @@ export default function Navbar() {
     { href: "/personal", label: "Personal" },
     { href: "/business", label: "Business" },
     { href: "/about", label: "About us" },
-    { href: "/contact", label: "Contact us" },
+    { href: "/contact-us", label: "Contact us" },
     { href: "/support", label: "Support centre" },
   ];
 
@@ -36,7 +34,6 @@ export default function Navbar() {
       className={`sticky top-0 z-40 w-full bg-brand-light dark:bg-brand-dark border-b border-brand-gray/20 dark:border-brand-navy/40 shadow-sm transition-shadow duration-300 ${
         scrolled ? "shadow-md" : ""
       }`}
-      style={{ fontSize: "13px" }}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-2.5">
         {/* Logo */}
@@ -44,12 +41,12 @@ export default function Navbar() {
           <img
             src="/images/logo-nobg.png"
             alt="Horizon Ridge Credit Union logo"
-            className="h-8 w-auto block dark:hidden"
+            className="h-12 w-auto block dark:hidden"
           />
           <img
             src="/images/logo.jpg"
             alt="Horizon Ridge Credit Union logo"
-            className="h-8 w-auto hidden dark:block"
+            className="h-12 w-auto hidden dark:block"
           />
           <span className="font-semibold text-sm md:text-base text-brand-navy dark:text-brand-sun ml-1 hidden xs:inline">
             Horizon Ridge
@@ -76,19 +73,6 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          {/* Theme toggle */}
-          <button
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            {dark ? (
-              <i className="fa-solid fa-sun text-sm text-amber-400"></i>
-            ) : (
-              <i className="fa-solid fa-moon text-sm text-brand-navy"></i>
-            )}
-          </button>
-
           {/* Mobile menu toggle */}
           <button
             aria-label="Open menu"

@@ -10,14 +10,15 @@
   --color-success: #059669;
   --color-danger: #dc2626;
   --color-warning: #d97706;
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-sans: "Geist", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", "Fira Code", monospace;
 }
 
 body {
   margin: 0;
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-  font-size: 0.938rem;
+  font-family: "Geist", system-ui, -apple-system, sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -55,3 +56,53 @@ body {
 @utility transition-all-500 { transition: all 0.5s ease; }
 @utility transition-all-700 { transition: all 0.7s ease; }
 @utility transition-all-1000 { transition: all 1s ease; }
+
+/* Slide up animation for bottom sheets */
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+/* Safe area padding for mobile bottom nav */
+@utility safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Scale active for touch feedback */
+@utility active-scale {
+  transition: transform 0.15s ease;
+}
+.active-scale:active {
+  transform: scale(0.96);
+}
+
+/* iOS-style bottom tab safe area */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* iOS input border fix — persists border on focus, removes default tap highlight */
+input,
+textarea,
+select {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  border-width: 1px;
+}
+
+/* Ensure Tailwind focus rings work on iOS Safari */
+*:focus {
+  -webkit-tap-highlight-color: transparent;
+}

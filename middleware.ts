@@ -53,11 +53,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect logged-in users away from auth pages
+  // Redirect logged-in users away from auth pages (skip if OTP pending)
   if (isAuthPage && user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    const otpPending = request.cookies.has("login_otp_pending");
+    if (!otpPending) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

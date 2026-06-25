@@ -148,7 +148,7 @@ export default function AdminCodes() {
           <button
             type="submit"
             disabled={sending}
-            className="w-full bg-brand-sun hover:bg-brand-navy disabled:bg-brand-sun/50 disabled:opacity-50 disabled:cursor-not-allowed text-white font-normal py-2.5 px-4 rounded-xl transition-colors text-sm"
+            className="w-full bg-brand-sun hover:bg-brand-navy disabled:bg-brand-sun/50 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-xl transition-colors text-sm"
           >
             {sending ? <i className="fa-solid fa-spinner fa-spin mr-1"></i> : <i className="fa-regular fa-key mr-1"></i>}
             {sending ? "Generating..." : "Generate and Send"}

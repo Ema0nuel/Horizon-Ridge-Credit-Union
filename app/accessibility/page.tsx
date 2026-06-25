@@ -139,7 +139,7 @@ export default function AccessibilityPage() {
               <div className="rounded-xl shadow-lg bg-white dark:bg-brand-dark border border-brand-sun/20 p-6 flex flex-col">
                 <div className="text-lg font-bold text-brand-navy dark:text-brand-sun mb-2">Online</div>
                 <div className="text-brand-gray dark:text-brand-light mb-2">
-                  <p>Use our online <Link href="/contact" className="text-brand-sun underline" rel="noopener">customer feedback form</Link>.</p>
+                  <p>Use our online <Link href="/contact-us" className="text-brand-sun underline" rel="noopener">customer feedback form</Link>.</p>
                   <p>Or use our online messaging service to chat with a staff member.</p>
                 </div>
               </div>

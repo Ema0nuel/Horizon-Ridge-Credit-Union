@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import Script from "next/script";
 import "./globals.css";
 import PublicLayoutWrapper from "../components/PublicLayoutWrapper";
@@ -7,11 +8,8 @@ import { ThemeProvider } from "../components/ThemeProvider";
 import ToastContainer from "../components/toast";
 import { siteConfig, organizationSchema, websiteSchema } from "../lib/seo";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
+const geistSans = GeistSans;
+const geistMono = GeistMono;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -113,7 +111,7 @@ export default function RootLayout({
   const webJson = websiteSchema();
 
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
+    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
       <head>
         <script
           type="application/ld+json"
