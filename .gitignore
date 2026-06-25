@@ -35,3 +35,5 @@ temp-next/
 *test.js
 **.md
 /.next
+skills-lock.json
+/.github/
