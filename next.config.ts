@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  server: {
-    hostname: "0.0.0.0",
-  },
   images: {
     remotePatterns: [
       {
