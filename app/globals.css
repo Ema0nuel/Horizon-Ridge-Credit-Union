@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-sun: #f59e0b;
+  --color-brand-navy: #1e3a8a;
+  --color-brand-teal: #0f766e;
+  --color-brand-gray: #374151;
+  --color-brand-light: #ffffff;
+  --color-brand-dark: #111827;
+  --color-success: #059669;
+  --color-danger: #dc2626;
+  --color-warning: #d97706;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-size: 0.938rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+.skeleton {
+  @apply bg-gray-300 dark:bg-gray-700 relative overflow-hidden rounded;
+}
+.skeleton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+/* Transitions used by hero carousel */
+@utility transition-all-300 { transition: all 0.3s ease; }
+@utility transition-all-500 { transition: all 0.5s ease; }
+@utility transition-all-700 { transition: all 0.7s ease; }
+@utility transition-all-1000 { transition: all 1s ease; }

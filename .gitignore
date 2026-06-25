@@ -27,4 +27,11 @@ dist-ssr
 
 # Temp Next.js API migration workspace
 /.temp
+/old/
 .vercel
+temp-next/
+.claude/
+.vscode/
+*test.js
+**.md
+/.next
